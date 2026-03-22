@@ -19,9 +19,19 @@ SHARED_APP_LABELS = {
     'saas',
 }
 
+# Shared apps that should be tenant-scoped when a tenant DB is active.
+TENANT_SHARED_APP_LABELS = {
+    'admin',
+    'contenttypes',
+    'auth',
+}
+
 # Shared apps that also need schema on tenant DBs for FK constraints.
 SHARED_MIGRATION_APP_LABELS = {
     'saas',
+    'admin',
+    'contenttypes',
+    'auth',
 }
 
 
@@ -69,6 +79,8 @@ class TenantDatabaseRouter:
         """
         # Keep control-plane models in the shared database.
         if model._meta.app_label in SHARED_APP_LABELS:
+            if model._meta.app_label in TENANT_SHARED_APP_LABELS and get_tenant_db().startswith('tenant_'):
+                return get_tenant_db()
             return 'default'
         
         return get_tenant_db()
@@ -79,6 +91,8 @@ class TenantDatabaseRouter:
         """
         # Keep control-plane models in the shared database.
         if model._meta.app_label in SHARED_APP_LABELS:
+            if model._meta.app_label in TENANT_SHARED_APP_LABELS and get_tenant_db().startswith('tenant_'):
+                return get_tenant_db()
             return 'default'
         
         return get_tenant_db()
@@ -87,7 +101,17 @@ class TenantDatabaseRouter:
         """
         Allow relations between objects in the same database.
         """
-        return None  # Allow by default
+        db1 = getattr(obj1._state, 'db', None)
+        db2 = getattr(obj2._state, 'db', None)
+
+        if db1 and db2 and db1 == db2:
+            return True
+
+        # Allow cross-db relations when a shared (control-plane) model is involved.
+        if obj1._meta.app_label in SHARED_APP_LABELS or obj2._meta.app_label in SHARED_APP_LABELS:
+            return True
+
+        return None
 
     def allow_migrate(self, db, app_label, model_name=None, **hints):
         """

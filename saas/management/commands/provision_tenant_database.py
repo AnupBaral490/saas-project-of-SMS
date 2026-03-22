@@ -12,6 +12,7 @@ from saas.models import Organization
 from saas.tenant_provisioning import (
     create_or_update_tenant_admin,
     ensure_tenant_database,
+    ensure_tenant_organization,
 )
 
 
@@ -57,6 +58,8 @@ class Command(BaseCommand):
             )
         except Exception as e:
             raise CommandError(f'Failed to provision tenant database: {str(e)}')
+
+        ensure_tenant_organization(organization, db_alias=db_name)
 
         self.stdout.write(self.style.SUCCESS(f'✓ Added database configuration: {db_name}'))
         self.stdout.write(self.style.SUCCESS('✓ Created tenant_databases directory'))

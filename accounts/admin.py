@@ -3,6 +3,7 @@ from django.contrib.auth.admin import UserAdmin
 from django.utils.html import format_html
 from django.urls import reverse
 from saas.utils import get_request_organization
+from saas.db_router import get_tenant_db
 from .models import User, StudentProfile, TeacherProfile, ParentProfile, AdminProfile, ParentTeacherMessage
 
 class CustomUserAdmin(UserAdmin):
@@ -18,6 +19,11 @@ class CustomUserAdmin(UserAdmin):
     
     def get_readonly_fields(self, request, obj=None):
         readonly = list(self.readonly_fields)
+
+        # Always lock organization field in tenant DBs.
+        if get_tenant_db() != 'default':
+            if 'organization' not in readonly:
+                readonly.append('organization')
         
         # For non-superusers, make organization readonly
         if not request.user.is_superuser:
@@ -30,6 +36,57 @@ class CustomUserAdmin(UserAdmin):
                 readonly.append('password_change_link')
         
         return readonly
+
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+
+        # In tenant DBs, auth groups/permissions live in the control-plane DB.
+        if get_tenant_db() != 'default':
+            form.base_fields.pop('groups', None)
+            form.base_fields.pop('user_permissions', None)
+
+        return form
+
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = super().get_fieldsets(request, obj)
+
+        if get_tenant_db() == 'default':
+            return fieldsets
+
+        cleaned = []
+        for name, opts in fieldsets:
+            fields = opts.get('fields', ())
+            if isinstance(fields, tuple):
+                filtered = tuple(
+                    field for field in fields if field not in {'groups', 'user_permissions'}
+                )
+            else:
+                filtered = [
+                    field for field in fields if field not in {'groups', 'user_permissions'}
+                ]
+
+            if filtered:
+                new_opts = dict(opts)
+                new_opts['fields'] = filtered
+                cleaned.append((name, new_opts))
+
+        return cleaned
+
+    def log_addition(self, request, obj, message):
+        # Skip admin log entries in tenant DBs to avoid cross-db FK issues.
+        if get_tenant_db() != 'default':
+            return
+        return super().log_addition(request, obj, message)
+
+    def log_change(self, request, obj, message):
+        if get_tenant_db() != 'default':
+            return
+        return super().log_change(request, obj, message)
+
+    def log_deletion(self, request, obj, object_repr):
+        if get_tenant_db() != 'default':
+            return
+        return super().log_deletion(request, obj, object_repr)
     
     def password_change_link(self, obj):
         if obj.pk:
@@ -45,6 +102,10 @@ class CustomUserAdmin(UserAdmin):
     def get_queryset(self, request):
         """Filter users by organization"""
         queryset = super().get_queryset(request)
+
+        # In tenant DBs, do not filter by organization_id (stored as NULL).
+        if get_tenant_db() != 'default':
+            return queryset
         
         # Superusers see all users
         if request.user.is_superuser:
@@ -59,14 +120,15 @@ class CustomUserAdmin(UserAdmin):
     
     def save_model(self, request, obj, form, change):
         """Automatically set organization when creating users"""
-        # Always ensure organization_id is set from request context
-        organization = get_request_organization(request)
-        
-        if not change:  # Creating new object
-            # For new objects, always set organization from request
-            if organization:
+        # In tenant DBs, store organization_id as NULL to avoid cross-db FK.
+        if get_tenant_db() != 'default':
+            obj.organization = None
+            obj.organization_id = None
+        else:
+            organization = get_request_organization(request)
+            if not change and organization:
                 obj.organization = organization
-                obj.organization_id = organization.id  # Explicitly set ID
+                obj.organization_id = organization.id
         
         super().save_model(request, obj, form, change)
 

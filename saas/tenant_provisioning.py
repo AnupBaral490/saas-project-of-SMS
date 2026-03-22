@@ -5,6 +5,7 @@ from pathlib import Path
 
 from django.conf import settings
 from django.core.management import call_command
+from django.db import connections
 
 
 def add_tenant_database_to_config(organization_id, organization_slug):
@@ -47,7 +48,37 @@ def ensure_tenant_database(
     if run_migrations and (created_new_db or migrate_if_exists):
         call_command("migrate", database=db_alias, interactive=False, verbosity=verbosity)
 
+    # Mirror the organization into the tenant DB so FK constraints succeed.
+    ensure_tenant_organization(organization, db_alias=db_alias)
+
     return db_alias, db_path, created_new_db
+
+
+def ensure_tenant_organization(organization, db_alias=None):
+    """
+    Ensure the organization row exists in the tenant database.
+    """
+    from saas.models import Organization
+
+    if db_alias is None:
+        db_alias = add_tenant_database_to_config(organization.id, organization.slug)
+
+    connection = connections[db_alias]
+    if "saas_organization" not in connection.introspection.table_names():
+        return False
+
+    Organization.objects.using(db_alias).update_or_create(
+        id=organization.id,
+        defaults={
+            "name": organization.name,
+            "slug": organization.slug,
+            "subdomain": organization.subdomain,
+            "contact_email": organization.contact_email,
+            "phone": organization.phone,
+            "is_active": organization.is_active,
+        },
+    )
+    return True
 
 
 def ensure_tenant_admin_from_user(organization, source_user):
