@@ -12,6 +12,7 @@ from .forms import AttendanceSessionForm, QuickAttendanceForm, AttendanceFilterF
 from academic.models import TeacherSubjectAssignment, StudentEnrollment, Class
 from accounts.models import StudentProfile, TeacherProfile
 from saas.utils import get_request_organization
+from saas.db_router import get_tenant_db
 
 def is_teacher_or_admin(user):
     return user.is_authenticated and user.user_type in ['admin', 'teacher']
@@ -24,6 +25,9 @@ def get_current_organization(request):
 def scoped_queryset(queryset, request):
     organization = get_current_organization(request)
     if organization and any(field.name == 'organization' for field in queryset.model._meta.fields):
+        # In tenant DBs, organization_id is often NULL; avoid filtering it out.
+        if get_tenant_db().startswith('tenant_'):
+            return queryset
         return queryset.filter(organization=organization)
     return queryset
 
@@ -31,6 +35,8 @@ def scoped_queryset(queryset, request):
 def scoped_profile_queryset(queryset, request):
     organization = get_current_organization(request)
     if organization:
+        if get_tenant_db().startswith('tenant_'):
+            return queryset
         return queryset.filter(user__organization=organization)
     return queryset
 

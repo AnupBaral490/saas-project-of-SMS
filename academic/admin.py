@@ -275,6 +275,17 @@ class ClassAdmin(admin.ModelAdmin):
         return TeacherSubjectAssignment.objects.filter(class_assigned=obj).values('teacher').distinct().count()
     get_teacher_count.short_description = 'Teachers Assigned'
 
+    def save_formset(self, request, form, formset, change):
+        if formset.model is TeacherSubjectAssignment:
+            instances = formset.save(commit=False)
+            for instance in instances:
+                if instance.academic_year_id is None:
+                    instance.academic_year = form.instance.academic_year
+                instance.save()
+            formset.save_m2m()
+            return
+        super().save_formset(request, form, formset, change)
+
 @admin.register(StudentEnrollment)
 class StudentEnrollmentAdmin(admin.ModelAdmin):
     list_display = ('get_student_name', 'get_student_id', 'enrollment_date', 'is_active')
