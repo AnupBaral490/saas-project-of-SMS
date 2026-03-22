@@ -11,6 +11,7 @@ from .models import TeacherAttendance, TeacherActivityLog, TeacherLeave, Attenda
 from accounts.models import TeacherProfile
 from academic.models import TeacherSubjectAssignment
 from saas.utils import get_request_organization
+from saas.db_router import get_tenant_db
 
 def is_admin(user):
     return user.is_authenticated and user.user_type == 'admin'
@@ -23,14 +24,20 @@ def get_current_organization(request):
 def scoped_queryset(queryset, request):
     organization = get_current_organization(request)
     if organization and any(field.name == 'organization' for field in queryset.model._meta.fields):
-        return queryset.filter(organization=organization)
+        if get_tenant_db().startswith('tenant_'):
+            return queryset
+        else:
+            return queryset.filter(organization=organization)
     return queryset
 
 
 def scoped_profile_queryset(queryset, request):
     organization = get_current_organization(request)
     if organization:
-        return queryset.filter(user__organization=organization)
+        if get_tenant_db().startswith('tenant_'):
+            return queryset
+        else:
+            return queryset.filter(user__organization=organization)
     return queryset
 
 @login_required
