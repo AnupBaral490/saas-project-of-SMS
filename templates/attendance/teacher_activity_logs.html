@@ -1,0 +1,300 @@
+{% extends 'base.html' %}
+
+{% block title %}Teacher Activity Logs - SMS{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2><i class="fas fa-list-alt"></i> Teacher Activity Logs</h2>
+        <p class="text-muted">Detailed log of all teacher activities with timestamps and filtering</p>
+    </div>
+</div>
+
+<!-- Filter Controls -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="m-0"><i class="fas fa-filter"></i> Filter Options</h6>
+            </div>
+            <div class="card-body">
+                <form method="get" class="row g-3">
+                    <div class="col-md-3">
+                        <label for="teacher" class="form-label">Teacher</label>
+                        <select name="teacher" id="teacher" class="form-control">
+                            <option value="">All Teachers</option>
+                            {% for teacher in teachers %}
+                            <option value="{{ teacher.id }}" {% if selected_teacher == teacher.id|stringformat:"s" %}selected{% endif %}>
+                                {{ teacher.user.get_full_name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <label for="activity_type" class="form-label">Activity Type</label>
+                        <select name="activity_type" id="activity_type" class="form-control">
+                            <option value="">All Activities</option>
+                            {% for type_code, type_name in activity_types %}
+                            <option value="{{ type_code }}" {% if selected_activity_type == type_code %}selected{% endif %}>
+                                {{ type_name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <label for="date" class="form-label">Date</label>
+                        <input type="date" name="date" id="date" value="{{ selected_date }}" class="form-control">
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <label class="form-label">&nbsp;</label>
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search"></i> Filter
+                            </button>
+                            <a href="{% url 'attendance:teacher_activity_logs' %}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Clear
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Activity Logs -->
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h6 class="m-0">
+                    <i class="fas fa-history"></i> Activity Logs
+                    {% if page_obj %}
+                        <span class="badge bg-light text-dark ms-2">{{ page_obj.paginator.count }} total</span>
+                    {% endif %}
+                </h6>
+                <div>
+                    <a href="{% url 'attendance:teacher_attendance_dashboard' %}" class="btn btn-light btn-sm">
+                        <i class="fas fa-dashboard"></i> Dashboard
+                    </a>
+                    <a href="{% url 'attendance:teacher_activity_timeline' %}" class="btn btn-light btn-sm">
+                        <i class="fas fa-timeline"></i> Timeline
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if page_obj %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Teacher</th>
+                                <th>Activity</th>
+                                <th>Priority</th>
+                                <th>Description</th>
+                                <th>Location</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for activity in page_obj %}
+                            <tr>
+                                <td>
+                                    <strong>{{ activity.timestamp|time:"H:i:s" }}</strong><br>
+                                    <small class="text-muted">{{ activity.timestamp|date:"M d, Y" }}</small>
+                                </td>
+                                <td>
+                                    <strong>{{ activity.teacher.user.get_full_name }}</strong><br>
+                                    <small class="text-muted">{{ activity.teacher.user.email|default:"No email" }}</small>
+                                </td>
+                                <td>
+                                    {% if activity.activity_type == 'mark_attendance' %}
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-check"></i> {{ activity.get_activity_type_display }}
+                                        </span>
+                                    {% elif activity.activity_type == 'create_assignment' %}
+                                        <span class="badge bg-warning">
+                                            <i class="fas fa-tasks"></i> {{ activity.get_activity_type_display }}
+                                        </span>
+                                    {% elif activity.activity_type == 'grade_exam' %}
+                                        <span class="badge bg-info">
+                                            <i class="fas fa-star"></i> {{ activity.get_activity_type_display }}
+                                        </span>
+                                    {% elif activity.activity_type == 'login' or activity.activity_type == 'first_login' %}
+                                        <span class="badge bg-primary">
+                                            <i class="fas fa-sign-in-alt"></i> {{ activity.get_activity_type_display }}
+                                        </span>
+                                    {% elif activity.activity_type == 'logout' %}
+                                        <span class="badge bg-danger">
+                                            <i class="fas fa-sign-out-alt"></i> {{ activity.get_activity_type_display }}
+                                        </span>
+                                    {% elif activity.activity_type == 'send_message' %}
+                                        <span class="badge bg-secondary">
+                                            <i class="fas fa-envelope"></i> {{ activity.get_activity_type_display }}
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-light text-dark">
+                                            <i class="fas fa-circle"></i> {{ activity.get_activity_type_display }}
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if activity.priority_level == 'high' %}
+                                        <span class="badge bg-danger">High</span>
+                                    {% elif activity.priority_level == 'medium' %}
+                                        <span class="badge bg-warning">Medium</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Low</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {{ activity.description|truncatechars:80 }}
+                                    {% if activity.related_schedule %}
+                                        <br><small class="text-info">
+                                            <i class="fas fa-calendar"></i> Related to scheduled class
+                                        </small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if activity.is_on_campus %}
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-map-marker-alt"></i> On Campus
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-warning">
+                                            <i class="fas fa-map-marker-alt"></i> Off Campus
+                                        </span>
+                                    {% endif %}
+                                    {% if activity.ip_address %}
+                                        <br><small class="text-muted">{{ activity.ip_address }}</small>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-4">
+                                    <i class="fas fa-search fa-2x mb-2"></i><br>
+                                    No activity logs found for the selected filters.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                {% if page_obj.has_other_pages %}
+                <nav aria-label="Activity logs pagination" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.teacher %}&teacher={{ request.GET.teacher }}{% endif %}{% if request.GET.date %}&date={{ request.GET.date }}{% endif %}{% if request.GET.activity_type %}&activity_type={{ request.GET.activity_type }}{% endif %}">
+                                    <i class="fas fa-chevron-left"></i> Previous
+                                </a>
+                            </li>
+                        {% endif %}
+                        
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if page_obj.number == num %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ num }}</span>
+                                </li>
+                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}{% if request.GET.teacher %}&teacher={{ request.GET.teacher }}{% endif %}{% if request.GET.date %}&date={{ request.GET.date }}{% endif %}{% if request.GET.activity_type %}&activity_type={{ request.GET.activity_type }}{% endif %}">{{ num }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.teacher %}&teacher={{ request.GET.teacher }}{% endif %}{% if request.GET.date %}&date={{ request.GET.date }}{% endif %}{% if request.GET.activity_type %}&activity_type={{ request.GET.activity_type }}{% endif %}">
+                                    Next <i class="fas fa-chevron-right"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-list-alt fa-4x text-muted mb-3"></i>
+                    <h5 class="text-muted">No Activity Logs</h5>
+                    <p class="text-muted">No teacher activity logs are available yet.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Activity Summary -->
+{% if page_obj %}
+<div class="row mt-4">
+    <div class="col-md-3">
+        <div class="card bg-gradient-primary text-white">
+            <div class="card-body text-center">
+                <h4>{{ page_obj.paginator.count }}</h4>
+                <p class="mb-0">Total Activities</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-gradient-success text-white">
+            <div class="card-body text-center">
+                <h4>{{ page_obj|length }}</h4>
+                <p class="mb-0">Showing on Page</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-gradient-info text-white">
+            <div class="card-body text-center">
+                <h4>{{ teachers.count }}</h4>
+                <p class="mb-0">Total Teachers</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-gradient-warning text-white">
+            <div class="card-body text-center">
+                <h4>{{ activity_types|length }}</h4>
+                <p class="mb-0">Activity Types</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<script>
+// Auto-refresh every 5 minutes if no filters are applied
+{% if not selected_teacher and not selected_activity_type and not selected_date %}
+setInterval(function() {
+    if (document.visibilityState === 'visible') {
+        location.reload();
+    }
+}, 300000);
+{% endif %}
+
+// Form auto-submit on filter change
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    const selects = form.querySelectorAll('select');
+    const dateInput = form.querySelector('input[type="date"]');
+    
+    selects.forEach(select => {
+        select.addEventListener('change', function() {
+            form.submit();
+        });
+    });
+    
+    dateInput.addEventListener('change', function() {
+        form.submit();
+    });
+});
+</script>
+{% endblock %}

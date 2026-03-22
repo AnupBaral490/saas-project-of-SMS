@@ -1,0 +1,125 @@
+{% extends "admin/change_list.html" %}
+{% load i18n admin_urls static %}
+
+{% block result_list %}
+<div class="results">
+    <div style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-left: 4px solid #417690;">
+        <h2 style="margin: 0 0 5px 0; color: #417690;">📚 Student Enrollments by Class</h2>
+        <p style="margin: 0; color: #666;">Total Classes: {{ total_classes }} | Use filters on the right to narrow down results</p>
+    </div>
+
+    {% if grouped_enrollments %}
+        {% for class_obj, enrollments in grouped_enrollments %}
+        <div class="class-section" style="margin-bottom: 30px; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <!-- Class Header -->
+            <div class="class-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 20px; cursor: pointer;" onclick="toggleSection('class-{{ forloop.counter }}')">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <h3 style="margin: 0 0 5px 0; font-size: 18px; font-weight: 600;">
+                            📖 {{ class_obj.course.name }} - Year {{ class_obj.year }}, Semester {{ class_obj.semester }}, Section {{ class_obj.section }}
+                        </h3>
+                        <p style="margin: 0; font-size: 13px; opacity: 0.9;">
+                            🏛️ {{ class_obj.course.department.name }} | 📅 {{ class_obj.academic_year.year }}
+                        </p>
+                    </div>
+                    <div style="text-align: right;">
+                        <span style="background: rgba(255,255,255,0.2); padding: 5px 15px; border-radius: 20px; font-size: 14px; font-weight: bold;">
+                            {{ enrollments|length }} Student{{ enrollments|length|pluralize }}
+                        </span>
+                        <div style="margin-top: 5px; font-size: 20px;" id="toggle-icon-class-{{ forloop.counter }}">▼</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Students Table -->
+            <div id="class-{{ forloop.counter }}" class="class-content" style="display: block;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
+                            <th style="padding: 12px; text-align: left; font-weight: 600; color: #495057; width: 50px;">#</th>
+                            <th style="padding: 12px; text-align: left; font-weight: 600; color: #495057;">Student Name</th>
+                            <th style="padding: 12px; text-align: left; font-weight: 600; color: #495057;">Student ID</th>
+                            <th style="padding: 12px; text-align: left; font-weight: 600; color: #495057;">Enrollment Date</th>
+                            <th style="padding: 12px; text-align: center; font-weight: 600; color: #495057;">Status</th>
+                            <th style="padding: 12px; text-align: center; font-weight: 600; color: #495057;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for enrollment in enrollments %}
+                        <tr style="border-bottom: 1px solid #e9ecef; {% if forloop.counter|divisibleby:2 %}background: #f8f9fa;{% else %}background: white;{% endif %}">
+                            <td style="padding: 12px; color: #6c757d;">{{ forloop.counter }}</td>
+                            <td style="padding: 12px;">
+                                <strong style="color: #212529;">👤 {{ enrollment.student.user.get_full_name|default:enrollment.student.user.username }}</strong>
+                            </td>
+                            <td style="padding: 12px;">
+                                <span style="font-family: monospace; background: #e9ecef; padding: 4px 8px; border-radius: 4px; color: #495057;">
+                                    {{ enrollment.student.student_id }}
+                                </span>
+                            </td>
+                            <td style="padding: 12px; color: #6c757d;">
+                                📅 {{ enrollment.enrollment_date|date:"M d, Y" }}
+                            </td>
+                            <td style="padding: 12px; text-align: center;">
+                                {% if enrollment.is_active %}
+                                    <span style="background: #d4edda; color: #155724; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600;">
+                                        ✓ Active
+                                    </span>
+                                {% else %}
+                                    <span style="background: #f8d7da; color: #721c24; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600;">
+                                        ✗ Inactive
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td style="padding: 12px; text-align: center;">
+                                <a href="{% url 'admin:academic_studentenrollment_change' enrollment.pk %}" 
+                                   style="background: #007bff; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 12px; display: inline-block;">
+                                    ✏️ Edit
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div style="padding: 40px; text-align: center; background: #f8f9fa; border-radius: 8px;">
+            <p style="font-size: 16px; color: #6c757d; margin: 0;">
+                📭 No student enrollments found. Try adjusting your filters or add new enrollments.
+            </p>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+function toggleSection(sectionId) {
+    var content = document.getElementById(sectionId);
+    var icon = document.getElementById('toggle-icon-' + sectionId);
+    
+    if (content.style.display === 'none') {
+        content.style.display = 'block';
+        icon.textContent = '▼';
+    } else {
+        content.style.display = 'none';
+        icon.textContent = '▶';
+    }
+}
+</script>
+
+<style>
+.class-section:hover {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    transition: box-shadow 0.3s ease;
+}
+
+.class-header:hover {
+    opacity: 0.95;
+}
+
+table tbody tr:hover {
+    background: #e7f3ff !important;
+    transition: background 0.2s ease;
+}
+</style>
+{% endblock %}

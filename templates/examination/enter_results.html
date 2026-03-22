@@ -1,0 +1,391 @@
+{% extends 'base.html' %}
+
+{% block title %}Enter Results - SMS{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-edit"></i> Enter Exam Results</h2>
+            <a href="{% url 'examination:exam_list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Exams
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Exam Information -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h6 class="m-0"><i class="fas fa-info-circle"></i> Exam Information</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <strong>Exam:</strong><br>
+                        <span class="text-muted">{{ exam.name }}</span>
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Class:</strong><br>
+                        <span class="text-muted">{{ exam.class_for.name }}</span>
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Date:</strong><br>
+                        <span class="text-muted">{{ exam.exam_date|date:"F d, Y" }}</span>
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Total Marks:</strong><br>
+                        <span class="text-muted">{{ exam.total_marks }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Results Entry Form -->
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <h6 class="m-0"><i class="fas fa-users"></i> Student Results</h6>
+            </div>
+            <div class="card-body">
+                <form method="post" id="resultsForm">
+                    {% csrf_token %}
+                    
+                    <!-- Quick Actions -->
+                    <div class="mb-3">
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-outline-info btn-sm" onclick="calculateGrades()">
+                                <i class="fas fa-calculator"></i> Auto Calculate Grades
+                            </button>
+                            <button type="button" class="btn btn-outline-warning btn-sm" onclick="markAllPresent()">
+                                <i class="fas fa-check-double"></i> Mark All Present
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="clearAll()">
+                                <i class="fas fa-eraser"></i> Clear All
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Student</th>
+                                    <th>Student ID</th>
+                                    <th>Present</th>
+                                    <th>Marks Obtained</th>
+                                    <th>Grade</th>
+                                    <th>Status</th>
+                                    <th>Remarks</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for data in students_data %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            {% if data.student.user.profile_picture %}
+                                            <img src="{{ data.student.user.profile_picture.url }}" alt="{{ data.student.user.get_full_name|default:data.student.user.username }}" 
+                                                 class="rounded-circle me-2" style="width: 35px; height: 35px; object-fit: cover;">
+                                            {% else %}
+                                            <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 35px; height: 35px;">
+                                                <i class="fas fa-user text-white"></i>
+                                            </div>
+                                            {% endif %}
+                                            <strong>
+                                                {% if data.student.user.first_name or data.student.user.last_name %}
+                                                    {{ data.student.user.first_name }} {{ data.student.user.last_name }}
+                                                {% else %}
+                                                    {{ data.student.user.username }}
+                                                {% endif %}
+                                            </strong>
+                                        </div>
+                                    </td>
+                                    <td>{{ data.student.student_id }}</td>
+                                    <td>
+                                        <input type="checkbox" class="form-check-input present-checkbox" 
+                                               name="present_{{ data.student.id }}" 
+                                               data-student-id="{{ data.student.id }}"
+                                               {% if data.existing_marks %}checked{% else %}checked{% endif %}>
+                                    </td>
+                                    <td>
+                                        <input type="number" class="form-control marks-input" 
+                                               name="marks_{{ data.student.id }}" 
+                                               min="0" max="{{ exam.total_marks }}" 
+                                               step="0.5"
+                                               value="{{ data.existing_marks }}"
+                                               data-student-id="{{ data.student.id }}"
+                                               placeholder="0-{{ exam.total_marks }}">
+                                    </td>
+                                    <td>
+                                        <select class="form-select grade-select" 
+                                                name="grade_{{ data.student.id }}" 
+                                                id="grade_{{ data.student.id }}"
+                                                disabled>
+                                            <option value="">-</option>
+                                            <option value="A+">A+ (90-100)</option>
+                                            <option value="A">A (80-89)</option>
+                                            <option value="B+">B+ (70-79)</option>
+                                            <option value="B">B (60-69)</option>
+                                            <option value="C+">C+ (50-59)</option>
+                                            <option value="C">C (40-49)</option>
+                                            <option value="D">D (30-39)</option>
+                                            <option value="F">F (0-29)</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <span class="badge status-badge" id="status_{{ data.student.id }}">-</span>
+                                    </td>
+                                    <td>
+                                        <input type="text" class="form-control form-control-sm" 
+                                               name="remarks_{{ data.student.id }}" 
+                                               value="{{ data.existing_remarks }}"
+                                               placeholder="Optional">
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted">
+                                        <i class="fas fa-info-circle"></i> No students enrolled in this class.
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Summary -->
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6>Results Summary</h6>
+                                    <div class="row text-center">
+                                        <div class="col-3">
+                                            <h5 class="text-success" id="passedCount">0</h5>
+                                            <small>Passed</small>
+                                        </div>
+                                        <div class="col-3">
+                                            <h5 class="text-danger" id="failedCount">0</h5>
+                                            <small>Failed</small>
+                                        </div>
+                                        <div class="col-3">
+                                            <h5 class="text-warning" id="absentCount">1</h5>
+                                            <small>Absent</small>
+                                        </div>
+                                        <div class="col-3">
+                                            <h5 class="text-info" id="averageMarks">0</h5>
+                                            <small>Average</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" id="publishResults" name="publish_results">
+                                        <label class="form-check-label" for="publishResults">
+                                            Publish results immediately
+                                        </label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" id="sendNotifications" name="send_notifications" checked>
+                                        <label class="form-check-label" for="sendNotifications">
+                                            Send notifications to students
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                        <button type="button" class="btn btn-secondary me-md-2" onclick="saveDraft()">
+                            <i class="fas fa-save"></i> Save as Draft
+                        </button>
+                        <a href="{% url 'examination:exam_list' %}" class="btn btn-outline-secondary me-md-2">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-check"></i> Save Results
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const totalMarks = {{ exam.total_marks }};
+const passingMarks = {{ exam.passing_marks }};
+
+function calculateGrade(marks) {
+    if (isNaN(marks) || marks < 0) return null;
+    
+    const percentage = (marks / totalMarks) * 100;
+    
+    if (percentage >= 90) return { grade: 'A+', status: 'Excellent', class: 'bg-success' };
+    if (percentage >= 80) return { grade: 'A', status: 'Very Good', class: 'bg-success' };
+    if (percentage >= 70) return { grade: 'B+', status: 'Good', class: 'bg-info' };
+    if (percentage >= 60) return { grade: 'B', status: 'Satisfactory', class: 'bg-info' };
+    if (percentage >= 50) return { grade: 'C+', status: 'Average', class: 'bg-warning' };
+    if (percentage >= 40) return { grade: 'C', status: 'Passed', class: 'bg-warning' };
+    if (percentage >= 30) return { grade: 'D', status: 'Poor', class: 'bg-danger' };
+    return { grade: 'F', status: 'Failed', class: 'bg-danger' };
+}
+
+function updateStudentGrade(marksInput) {
+    const studentId = marksInput.dataset.studentId;
+    const marks = parseFloat(marksInput.value);
+    const gradeSelect = document.getElementById(`grade_${studentId}`);
+    const statusSpan = document.getElementById(`status_${studentId}`);
+    
+    if (!marksInput.value || isNaN(marks)) {
+        gradeSelect.value = '';
+        statusSpan.textContent = '-';
+        statusSpan.className = 'badge';
+        return;
+    }
+    
+    const result = calculateGrade(marks);
+    if (result) {
+        gradeSelect.value = result.grade;
+        statusSpan.textContent = result.status;
+        statusSpan.className = `badge ${result.class}`;
+    }
+    
+    updateSummary();
+}
+
+function calculateGrades() {
+    document.querySelectorAll('.marks-input').forEach(input => {
+        if (input.value && !input.disabled) {
+            updateStudentGrade(input);
+        }
+    });
+}
+
+function markAllPresent() {
+    document.querySelectorAll('.present-checkbox').forEach(checkbox => {
+        checkbox.checked = true;
+        toggleStudentInputs(checkbox, true);
+    });
+    updateSummary();
+}
+
+function clearAll() {
+    if (confirm('Are you sure you want to clear all entered data?')) {
+        document.getElementById('resultsForm').reset();
+        
+        document.querySelectorAll('.status-badge').forEach(span => {
+            span.textContent = '-';
+            span.className = 'badge status-badge';
+        });
+        
+        document.querySelectorAll('.grade-select').forEach(select => {
+            select.value = '';
+        });
+        
+        updateSummary();
+    }
+}
+
+function toggleStudentInputs(checkbox, isPresent) {
+    const studentId = checkbox.dataset.studentId;
+    const marksInput = document.querySelector(`input[name="marks_${studentId}"]`);
+    const gradeSelect = document.getElementById(`grade_${studentId}`);
+    const statusSpan = document.getElementById(`status_${studentId}`);
+    
+    if (isPresent) {
+        marksInput.disabled = false;
+        if (marksInput.value) {
+            updateStudentGrade(marksInput);
+        } else {
+            statusSpan.textContent = '-';
+            statusSpan.className = 'badge status-badge';
+        }
+    } else {
+        marksInput.disabled = true;
+        marksInput.value = '';
+        gradeSelect.value = '';
+        statusSpan.textContent = 'Absent';
+        statusSpan.className = 'badge bg-secondary status-badge';
+    }
+}
+
+function updateSummary() {
+    let passed = 0, failed = 0, absent = 0, totalMarksSum = 0, count = 0;
+    
+    document.querySelectorAll('.present-checkbox').forEach(checkbox => {
+        const studentId = checkbox.dataset.studentId;
+        const marksInput = document.querySelector(`input[name="marks_${studentId}"]`);
+        
+        if (!checkbox.checked) {
+            absent++;
+        } else if (marksInput.value) {
+            const marks = parseFloat(marksInput.value);
+            if (!isNaN(marks)) {
+                totalMarksSum += marks;
+                count++;
+                
+                if (marks >= passingMarks) {
+                    passed++;
+                } else {
+                    failed++;
+                }
+            }
+        }
+    });
+    
+    document.getElementById('passedCount').textContent = passed;
+    document.getElementById('failedCount').textContent = failed;
+    document.getElementById('absentCount').textContent = absent;
+    document.getElementById('averageMarks').textContent = count > 0 ? (totalMarksSum / count).toFixed(1) : '0';
+}
+
+function saveDraft() {
+    const form = document.getElementById('resultsForm');
+    const draftInput = document.createElement('input');
+    draftInput.type = 'hidden';
+    draftInput.name = 'save_as_draft';
+    draftInput.value = 'true';
+    form.appendChild(draftInput);
+    form.submit();
+}
+
+// Event listeners
+document.addEventListener('DOMContentLoaded', function() {
+    // Marks input change
+    document.querySelectorAll('.marks-input').forEach(input => {
+        input.addEventListener('input', function() {
+            updateStudentGrade(this);
+        });
+        
+        // Initialize existing marks
+        if (input.value) {
+            updateStudentGrade(input);
+        }
+    });
+    
+    // Present/absent toggle
+    document.querySelectorAll('.present-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            toggleStudentInputs(this, this.checked);
+            updateSummary();
+        });
+    });
+    
+    // Initialize summary
+    updateSummary();
+});
+</script>
+{% endblock %}

@@ -1,0 +1,310 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ tenant.name }} - Settings{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="mb-0">Organization Settings</h1>
+                    <p class="text-muted mb-0">{{ organization.name }}</p>
+                </div>
+                <a href="{% url 'saas:tenant_dashboard' %}" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Navigation -->
+    <div class="row mb-4">
+        <div class="col-3">
+            <div class="list-group" role="tablist">
+                <a class="list-group-item list-group-item-action active" data-bs-toggle="list" href="#general">
+                    <i class="fas fa-cogs"></i> General Settings
+                </a>
+                <a class="list-group-item list-group-item-action" data-bs-toggle="list" href="#domains">
+                    <i class="fas fa-globe"></i> Domains
+                </a>
+                <a class="list-group-item list-group-item-action" data-bs-toggle="list" href="#admins">
+                    <i class="fas fa-users-cog"></i> Admin Users
+                </a>
+                <a class="list-group-item list-group-item-action" data-bs-toggle="list" href="#subscription">
+                    <i class="fas fa-credit-card"></i> Subscription
+                </a>
+                <a class="list-group-item list-group-item-action" data-bs-toggle="list" href="#storage">
+                    <i class="fas fa-database"></i> Storage & Database
+                </a>
+            </div>
+        </div>
+
+        <div class="col-9">
+            <div class="tab-content">
+                <!-- General Settings -->
+                <div class="tab-pane fade show active" id="general">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">General Settings</h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="post" action="#">
+                                {% csrf_token %}
+                                <div class="mb-3">
+                                    <label class="form-label">Organization Name</label>
+                                    <input type="text" class="form-control" value="{{ organization.name }}" disabled>
+                                    <small class="text-muted">Can only be changed by administrators</small>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Organization Slug</label>
+                                    <input type="text" class="form-control" value="{{ organization.slug }}" disabled>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Subdomain</label>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" value="{{ organization.subdomain }}" disabled>
+                                        <span class="input-group-text">.local</span>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Status</label>
+                                    <div>
+                                        {% if organization.is_active %}
+                                            <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Inactive</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Created Date</label>
+                                    <input type="text" class="form-control" value="{{ organization.created_at|date:'F d, Y H:i' }}" disabled>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Domains -->
+                <div class="tab-pane fade" id="domains">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Custom Domains</h5>
+                            <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addDomainModal">
+                                <i class="fas fa-plus"></i> Add Domain
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            {% if domains %}
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Domain</th>
+                                            <th>Status</th>
+                                            <th>Added</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for domain in domains %}
+                                        <tr>
+                                            <td><code>{{ domain.domain }}</code></td>
+                                            <td>
+                                                {% if domain.is_active %}
+                                                    <span class="badge bg-success">Active</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">Inactive</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ domain.created_at|date:'M d, Y' }}</td>
+                                            <td>
+                                                <a href="#" class="btn btn-sm btn-outline-danger">Remove</a>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <p class="text-muted text-center py-4">
+                                No custom domains configured yet.
+                            </p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Admin Users -->
+                <div class="tab-pane fade" id="admins">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Administrator Users</h5>
+                            <a href="{% url 'saas:tenant_users' %}?type=admin" class="btn btn-sm btn-primary">
+                                <i class="fas fa-plus"></i> Add Admin
+                            </a>
+                        </div>
+                        <div class="card-body">
+                            {% if admin_users %}
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Email</th>
+                                            <th>Status</th>
+                                            <th>Joined</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for user in admin_users %}
+                                        <tr>
+                                            <td>
+                                                {% if user.first_name %}
+                                                    {{ user.first_name }} {{ user.last_name }}
+                                                {% else %}
+                                                    {{ user.username }}
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ user.email }}</td>
+                                            <td>
+                                                {% if user.is_active %}
+                                                    <span class="badge bg-success">Active</span>
+                                                {% else %}
+                                                    <span class="badge bg-danger">Inactive</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ user.date_joined|date:'M d, Y' }}</td>
+                                            <td>
+                                                <a href="#" class="btn btn-sm btn-outline-secondary">Edit</a>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <p class="text-muted text-center py-4">
+                                No admin users found.
+                            </p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Subscription -->
+                <div class="tab-pane fade" id="subscription">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">Current Subscription</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if subscription %}
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p class="text-muted">Plan</p>
+                                    <h4>{{ subscription.plan.name }}</h4>
+                                    <p class="text-muted">{{ subscription.plan.description }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p class="text-muted">Status</p>
+                                    <p>
+                                        {% if subscription.is_active %}
+                                            <span class="badge bg-success">Active</span>
+                                            <br><small class="text-muted">Until {{ subscription.end_date|date:'F d, Y' }}</small>
+                                        {% else %}
+                                            <span class="badge bg-danger">Inactive</span>
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                            <hr>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p class="text-muted">Monthly Price</p>
+                                    <h5>${{ subscription.plan.price }}/month</h5>
+                                </div>
+                                <div class="col-md-6">
+                                    <p class="text-muted">Next Billing Date</p>
+                                    <p>{{ subscription.end_date|date:'F d, Y' }}</p>
+                                </div>
+                            </div>
+                            <hr>
+                            <a href="{% url 'saas:tenant_subscription' %}" class="btn btn-primary">
+                                Manage Subscription
+                            </a>
+                            {% else %}
+                            <p class="text-muted text-center py-4">
+                                No active subscription. <a href="{% url 'saas:tenant_subscription' %}">Choose a plan</a>
+                            </p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Storage & Database -->
+                <div class="tab-pane fade" id="storage">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">Storage & Database Information</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-info">
+                                <strong>Dedicated Database:</strong> This organization has its own isolated database.
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p class="text-muted">Database ID</p>
+                                    <code>tenant_{{ organization.id }}</code>
+                                </div>
+                                <div class="col-md-6">
+                                    <p class="text-muted">Database File</p>
+                                    <code>db_{{ organization.slug }}.sqlite3</code>
+                                </div>
+                            </div>
+                            <hr>
+                            <p class="text-muted small mb-2">Storage Usage (Estimated)</p>
+                            <div class="progress mb-3">
+                                <div class="progress-bar" role="progressbar" style="width: 25%;" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">
+                                    ~25 MB
+                                </div>
+                            </div>
+                            <small class="text-muted">Based on number of users and data stored</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Domain Modal -->
+<div class="modal fade" id="addDomainModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Custom Domain</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="#">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Domain Name</label>
+                        <input type="text" class="form-control" placeholder="example.com" required>
+                        <small class="text-muted">Must be a valid domain name</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Domain</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

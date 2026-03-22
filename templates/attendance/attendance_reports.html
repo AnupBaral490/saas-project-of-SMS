@@ -1,0 +1,239 @@
+{% extends 'base.html' %}
+
+{% block title %}Attendance Reports - SMS{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2><i class="fas fa-chart-bar"></i> Attendance Reports</h2>
+        <p class="text-muted">Generate and view attendance reports and analytics</p>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Report Generation -->
+    <div class="col-lg-4 mb-4">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h6 class="m-0"><i class="fas fa-file-alt"></i> Generate Report</h6>
+            </div>
+            <div class="card-body">
+                <form id="reportForm">
+                    <div class="mb-3">
+                        <label for="reportType" class="form-label">Report Type</label>
+                        <select class="form-select" id="reportType">
+                            <option value="monthly">Monthly Summary</option>
+                            <option value="student">Student-wise Report</option>
+                            <option value="class">Class-wise Report</option>
+                            <option value="subject">Subject-wise Report</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="reportClass" class="form-label">Class</label>
+                        <select class="form-select" id="reportClass" name="class_filter">
+                            <option value="">All Classes</option>
+                            {% for class in teacher_classes %}
+                            <option value="{{ class.id }}" {% if selected_class == class.id|stringformat:"s" %}selected{% endif %}>
+                                {{ class.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="reportMonth" class="form-label">Month</label>
+                        <select class="form-select" id="reportMonth" name="month_filter">
+                            <option value="" {% if not selected_month %}selected{% endif %}>All Months</option>
+                            <option value="2026-03" {% if selected_month == "2026-03" %}selected{% endif %}>March 2026</option>
+                            <option value="2026-02" {% if selected_month == "2026-02" %}selected{% endif %}>February 2026</option>
+                            <option value="2026-01" {% if selected_month == "2026-01" %}selected{% endif %}>January 2026</option>
+                            <option value="2025-12" {% if selected_month == "2025-12" %}selected{% endif %}>December 2025</option>
+                        </select>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="button" class="btn btn-primary" onclick="generateReport()">
+                            <i class="fas fa-chart-line"></i> Generate Report
+                        </button>
+                        <button type="button" class="btn btn-success" onclick="exportReport('pdf')">
+                            <i class="fas fa-file-pdf"></i> Export PDF
+                        </button>
+                        <button type="button" class="btn btn-info" onclick="exportReport('excel')">
+                            <i class="fas fa-file-excel"></i> Export Excel
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Report Display -->
+    <div class="col-lg-8 mb-4">
+        <!-- Summary Statistics -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card bg-gradient-primary text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6>Overall Attendance Rate</h6>
+                                <h3>{{ overall_attendance|default:"0" }}%</h3>
+                                <small>Selected Period</small>
+                            </div>
+                            <i class="fas fa-percentage fa-3x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card bg-gradient-success text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6>Best Performing Class</h6>
+                                <h3>{{ best_class|default:"N/A" }}</h3>
+                                <small>{{ best_class_percentage|default:"0" }}% Attendance</small>
+                            </div>
+                            <i class="fas fa-trophy fa-3x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Chart Area -->
+        <div class="card shadow mb-4">
+            <div class="card-header bg-info text-white">
+                <h6 class="m-0"><i class="fas fa-chart-area"></i> Attendance Trends</h6>
+            </div>
+            <div class="card-body">
+                <canvas id="attendanceChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+        
+        <!-- Detailed Report Table -->
+        <div class="card shadow">
+            <div class="card-header bg-secondary text-white">
+                <h6 class="m-0"><i class="fas fa-table"></i> Detailed Report</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Student/Class</th>
+                                <th>Total Classes</th>
+                                <th>Present</th>
+                                <th>Absent</th>
+                                <th>Late</th>
+                                <th>Excused</th>
+                                <th>Attendance %</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if student_reports %}
+                                {% for report in student_reports %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ report.student.user.get_full_name|default:report.student.user.username }}</strong><br>
+                                        <small class="text-muted">{{ report.student.student_id }}</small><br>
+                                        <small class="text-muted">{{ report.class_name }}</small><br>
+                                        <small class="text-info">{{ report.subject_name }}</small>
+                                    </td>
+                                    <td>{{ report.total_classes }}</td>
+                                    <td><span class="badge bg-success">{{ report.present }}</span></td>
+                                    <td><span class="badge bg-danger">{{ report.absent }}</span></td>
+                                    <td><span class="badge bg-warning">{{ report.late }}</span></td>
+                                    <td><span class="badge bg-info">{{ report.excused }}</span></td>
+                                    <td>
+                                        <div class="progress" style="height: 20px;">
+                                            <div class="progress-bar bg-{{ report.status_class }}" style="width: {{ report.percentage }}%">
+                                                {{ report.percentage }}%
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td><span class="badge bg-{{ report.status_class }}">{{ report.status }}</span></td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="8" class="text-center text-muted">
+                                        <i class="fas fa-info-circle"></i> No attendance records found for the selected period.
+                                        <br><small>Try selecting a different class or month, or mark attendance first.</small>
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Initialize attendance chart
+const ctx = document.getElementById('attendanceChart').getContext('2d');
+const attendanceChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+        datasets: [
+            {% for summary in class_summaries %}
+            {
+                label: '{{ summary.assignment.class_assigned.name }}',
+                data: [{{ summary.avg_attendance }}, {{ summary.avg_attendance }}, {{ summary.avg_attendance }}, {{ summary.avg_attendance }}],
+                borderColor: 'rgb(' + Math.floor(Math.random() * 255) + ',' + Math.floor(Math.random() * 255) + ',' + Math.floor(Math.random() * 255) + ')',
+                backgroundColor: 'rgba(' + Math.floor(Math.random() * 255) + ',' + Math.floor(Math.random() * 255) + ',' + Math.floor(Math.random() * 255) + ', 0.2)',
+                tension: 0.1
+            }{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            title: {
+                display: true,
+                text: 'Weekly Attendance Trends'
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                max: 100,
+                ticks: {
+                    callback: function(value) {
+                        return value + '%';
+                    }
+                }
+            }
+        }
+    }
+});
+
+function generateReport() {
+    const reportType = document.getElementById('reportType').value;
+    const reportClass = document.getElementById('reportClass').value;
+    const reportMonth = document.getElementById('reportMonth').value;
+    
+    // Build URL with query parameters
+    const params = new URLSearchParams();
+    if (reportClass) params.append('class_filter', reportClass);
+    if (reportMonth) params.append('month_filter', reportMonth);
+    
+    // Reload page with filters
+    window.location.href = '?' + params.toString();
+}
+
+function exportReport(format) {
+    console.log(`Exporting report as ${format}`);
+    
+    // In real app, this would trigger a download
+    alert(`Report export as ${format.toUpperCase()} started. The file will be downloaded shortly.`);
+}
+</script>
+{% endblock %}

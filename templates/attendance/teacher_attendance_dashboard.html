@@ -1,0 +1,297 @@
+{% extends 'base.html' %}
+
+{% block title %}Teacher Attendance Dashboard - SMS{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2><i class="fas fa-users-cog"></i> Teacher Attendance Dashboard</h2>
+        <p class="text-muted">Monitor and manage teacher attendance automatically</p>
+    </div>
+</div>
+
+<!-- Filter Controls -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <form method="get" class="d-flex gap-2">
+            <input type="date" name="date" value="{{ selected_date }}" class="form-control">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-filter"></i> Filter
+            </button>
+        </form>
+    </div>
+    <div class="col-md-6 text-end">
+        <a href="{% url 'attendance:teacher_detailed_activities' %}" class="btn btn-primary">
+            <i class="fas fa-tasks"></i> Detailed Activities
+        </a>
+        <a href="{% url 'attendance:teacher_activity_timeline' %}" class="btn btn-success">
+            <i class="fas fa-timeline"></i> Activity Timeline
+        </a>
+        <a href="{% url 'attendance:teacher_attendance_reports' %}" class="btn btn-info">
+            <i class="fas fa-chart-bar"></i> Reports
+        </a>
+        <a href="{% url 'attendance:manual_teacher_attendance' %}" class="btn btn-warning">
+            <i class="fas fa-edit"></i> Manual Entry
+        </a>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row mb-4">
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card bg-gradient-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6>Present Today</h6>
+                        <h3>{{ present_count }}</h3>
+                        <small>{{ attendance_percentage }}% Attendance</small>
+                    </div>
+                    <i class="fas fa-user-check fa-3x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card bg-gradient-danger text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6>Absent Today</h6>
+                        <h3>{{ absent_count }}</h3>
+                        <small>{{ teachers_without_attendance.count }} Not Marked</small>
+                    </div>
+                    <i class="fas fa-user-times fa-3x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card bg-gradient-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6>Late Today</h6>
+                        <h3>{{ late_count }}</h3>
+                        <small>After 9:00 AM</small>
+                    </div>
+                    <i class="fas fa-clock fa-3x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card bg-gradient-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6>Currently Online</h6>
+                        <h3>{{ online_teachers }}</h3>
+                        <small>Active in 30 min</small>
+                    </div>
+                    <i class="fas fa-wifi fa-3x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Today's Attendance Detail -->
+    <div class="col-lg-8 mb-4">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h6 class="m-0"><i class="fas fa-calendar-day"></i> Today's Attendance - {{ filter_date }}</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Teacher</th>
+                                <th>Status</th>
+                                <th>Check In</th>
+                                <th>Check Out</th>
+                                <th>Hours</th>
+                                <th>Last Activity</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in enhanced_attendance %}
+                            <tr>
+                                <td>
+                                    <strong>
+                                        {% if item.attendance.teacher.user.first_name or item.attendance.teacher.user.last_name %}
+                                            {{ item.attendance.teacher.user.get_full_name }}
+                                        {% else %}
+                                            {{ item.attendance.teacher.user.username|title }}
+                                        {% endif %}
+                                    </strong><br>
+                                    <small class="text-muted">{{ item.attendance.teacher.user.email|default:"No email" }}</small>
+                                    {% if item.has_real_activities %}
+                                        <br><span class="badge bg-success badge-sm">Real Activities</span>
+                                    {% else %}
+                                        <br><span class="badge bg-secondary badge-sm">No Activities</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if item.attendance.status == 'present' %}
+                                        <span class="badge bg-success">Present</span>
+                                    {% elif item.attendance.status == 'late' %}
+                                        <span class="badge bg-warning">Late</span>
+                                    {% elif item.attendance.status == 'absent' %}
+                                        <span class="badge bg-danger">Absent</span>
+                                    {% elif item.attendance.status == 'on_leave' %}
+                                        <span class="badge bg-info">On Leave</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ item.attendance.get_status_display }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if item.attendance.first_activity_time %}
+                                        {{ item.attendance.first_activity_time|time:"H:i" }}
+                                        <br><small class="text-muted">Real activity</small>
+                                    {% elif item.attendance.check_in_time %}
+                                        {{ item.attendance.check_in_time }}
+                                        <br><small class="text-muted">Manual entry</small>
+                                    {% else %}
+                                        --
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if item.attendance.last_activity_time %}
+                                        {{ item.attendance.last_activity_time|time:"H:i" }}
+                                        <br><small class="text-muted">Last activity</small>
+                                    {% elif item.attendance.check_out_time %}
+                                        {{ item.attendance.check_out_time }}
+                                        <br><small class="text-muted">Manual entry</small>
+                                    {% else %}
+                                        --
+                                    {% endif %}
+                                </td>
+                                <td>{{ item.attendance.total_hours|floatformat:1 }}h
+                                    {% if item.duties_performed %}
+                                        <br><small class="text-success">{{ item.duties_performed|length }} duties performed</small>
+                                    {% else %}
+                                        <br><small class="text-muted">No duties recorded</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% with item.attendance.teacher.activity_logs.first as last_activity %}
+                                        {% if last_activity %}
+                                            <small>{{ last_activity.timestamp|timesince }} ago</small><br>
+                                            <small class="text-muted">{{ last_activity.get_activity_type_display }}</small>
+                                        {% else %}
+                                            <small class="text-muted">No recent activity</small>
+                                        {% endif %}
+                                    {% endwith %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center text-muted">
+                                    <i class="fas fa-users fa-2x mb-2"></i><br>
+                                    No teacher attendance records found for {{ filter_date }}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Activity & Monthly Stats -->
+    <div class="col-lg-4">
+        <!-- Monthly Statistics -->
+        <div class="card shadow mb-4">
+            <div class="card-header bg-info text-white">
+                <h6 class="m-0"><i class="fas fa-chart-pie"></i> Monthly Statistics</h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between">
+                        <span>Working Days:</span>
+                        <strong>{{ monthly_stats.total_working_days }}</strong>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between">
+                        <span>Avg Attendance:</span>
+                        <strong>{{ monthly_stats.avg_attendance|floatformat:1 }}%</strong>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between">
+                        <span>Late Instances:</span>
+                        <strong>{{ monthly_stats.total_late_instances }}</strong>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between">
+                        <span>Total Leaves:</span>
+                        <strong>{{ monthly_stats.total_leaves }}</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recent Activity -->
+        <div class="card shadow">
+            <div class="card-header bg-secondary text-white">
+                <h6 class="m-0"><i class="fas fa-history"></i> Recent Activity</h6>
+            </div>
+            <div class="card-body">
+                {% for activity in recent_activities %}
+                <div class="d-flex align-items-center mb-3">
+                    <div class="flex-shrink-0">
+                        {% if activity.activity_type == 'login' %}
+                            <i class="fas fa-sign-in-alt text-success"></i>
+                        {% elif activity.activity_type == 'logout' %}
+                            <i class="fas fa-sign-out-alt text-danger"></i>
+                        {% elif activity.activity_type == 'mark_attendance' %}
+                            <i class="fas fa-check text-primary"></i>
+                        {% else %}
+                            <i class="fas fa-activity text-info"></i>
+                        {% endif %}
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <div class="fw-bold">{{ activity.teacher.user.get_full_name|default:activity.teacher.user.username }}</div>
+                        <small class="text-muted">{{ activity.get_activity_type_display }}</small><br>
+                        <small class="text-muted">{{ activity.timestamp|timesince }} ago</small>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-muted text-center">No recent activity</p>
+                {% endfor %}
+                
+                <div class="text-center mt-3">
+                    <a href="{% url 'attendance:teacher_activity_logs' %}" class="btn btn-sm btn-outline-secondary">
+                        View All Activity
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Auto-refresh page every 5 minutes
+setTimeout(function() {
+    location.reload();
+}, 300000);
+
+// Add real-time clock
+function updateClock() {
+    const now = new Date();
+    const timeString = now.toLocaleTimeString();
+    document.title = `Teacher Attendance (${timeString}) - SMS`;
+}
+
+setInterval(updateClock, 1000);
+</script>
+{% endblock %}

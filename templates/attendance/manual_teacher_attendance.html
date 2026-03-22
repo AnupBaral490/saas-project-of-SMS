@@ -1,0 +1,209 @@
+{% extends 'base.html' %}
+
+{% block title %}Manual Teacher Attendance - SMS{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2><i class="fas fa-edit"></i> Manual Teacher Attendance</h2>
+        <p class="text-muted">Manually mark teacher attendance for special cases or corrections</p>
+    </div>
+</div>
+
+<!-- Navigation -->
+<div class="row mb-4">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="{% url 'attendance:teacher_attendance_dashboard' %}">
+                        <i class="fas fa-dashboard"></i> Dashboard
+                    </a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">Manual Attendance</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<!-- Manual Attendance Form -->
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card shadow">
+            <div class="card-header bg-warning text-white">
+                <h6 class="m-0">
+                    <i class="fas fa-exclamation-triangle"></i> Manual Attendance Entry
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>Note:</strong> Manual attendance should only be used for corrections or special circumstances. 
+                    The system automatically tracks attendance based on teacher activities.
+                </div>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="teacher_id" class="form-label">Teacher <span class="text-danger">*</span></label>
+                            <select name="teacher_id" id="teacher_id" class="form-control" required>
+                                <option value="">Select Teacher</option>
+                                {% for teacher in teachers %}
+                                <option value="{{ teacher.id }}">
+                                    {{ teacher.user.get_full_name }} ({{ teacher.employee_id }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="date" class="form-label">Date <span class="text-danger">*</span></label>
+                            <input type="date" name="date" id="date" value="{{ today }}" class="form-control" required>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="status" class="form-label">Status <span class="text-danger">*</span></label>
+                            <select name="status" id="status" class="form-control" required>
+                                <option value="">Select Status</option>
+                                {% for status_code, status_name in status_choices %}
+                                <option value="{{ status_code }}">{{ status_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="check_in_time" class="form-label">Check In Time</label>
+                            <input type="time" name="check_in_time" id="check_in_time" class="form-control">
+                            <small class="form-text text-muted">Leave empty if not applicable</small>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="check_out_time" class="form-label">Check Out Time</label>
+                            <input type="time" name="check_out_time" id="check_out_time" class="form-control">
+                            <small class="form-text text-muted">Leave empty if not applicable</small>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="remarks" class="form-label">Remarks</label>
+                            <textarea name="remarks" id="remarks" class="form-control" rows="3" placeholder="Reason for manual entry..."></textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-warning">
+                                <i class="fas fa-save"></i> Save Manual Attendance
+                            </button>
+                            <a href="{% url 'attendance:teacher_attendance_dashboard' %}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Guidelines -->
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h6 class="m-0"><i class="fas fa-lightbulb"></i> Guidelines</h6>
+            </div>
+            <div class="card-body">
+                <h6>When to use manual attendance:</h6>
+                <ul class="list-unstyled">
+                    <li><i class="fas fa-check text-success"></i> System downtime corrections</li>
+                    <li><i class="fas fa-check text-success"></i> Leave approvals</li>
+                    <li><i class="fas fa-check text-success"></i> Emergency situations</li>
+                    <li><i class="fas fa-check text-success"></i> Technical issues</li>
+                </ul>
+                
+                <hr>
+                
+                <h6>Status Definitions:</h6>
+                <ul class="list-unstyled">
+                    <li><span class="badge bg-success">Present</span> - Full day attendance</li>
+                    <li><span class="badge bg-warning">Late</span> - Arrived after scheduled time</li>
+                    <li><span class="badge bg-danger">Absent</span> - Did not attend</li>
+                    <li><span class="badge bg-info">On Leave</span> - Approved leave</li>
+                    <li><span class="badge bg-secondary">Half Day</span> - Partial attendance</li>
+                </ul>
+                
+                <hr>
+                
+                <div class="alert alert-warning">
+                    <small>
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Manual entries override automatic tracking. Use with caution.
+                    </small>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recent Manual Entries -->
+        <div class="card mt-3">
+            <div class="card-header bg-secondary text-white">
+                <h6 class="m-0"><i class="fas fa-history"></i> Recent Manual Entries</h6>
+            </div>
+            <div class="card-body">
+                <p class="text-muted text-center">
+                    <i class="fas fa-clock"></i><br>
+                    Recent manual attendance entries will appear here
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-calculate hours when times are entered
+    const checkInTime = document.getElementById('check_in_time');
+    const checkOutTime = document.getElementById('check_out_time');
+    
+    function calculateHours() {
+        if (checkInTime.value && checkOutTime.value) {
+            const checkIn = new Date('2000-01-01 ' + checkInTime.value);
+            const checkOut = new Date('2000-01-01 ' + checkOutTime.value);
+            
+            if (checkOut > checkIn) {
+                const diffMs = checkOut - checkIn;
+                const diffHours = diffMs / (1000 * 60 * 60);
+                
+                // Show calculated hours (you can add a display element for this)
+                console.log('Calculated hours:', diffHours.toFixed(2));
+            }
+        }
+    }
+    
+    checkInTime.addEventListener('change', calculateHours);
+    checkOutTime.addEventListener('change', calculateHours);
+    
+    // Form validation
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function(e) {
+        const teacherId = document.getElementById('teacher_id').value;
+        const date = document.getElementById('date').value;
+        const status = document.getElementById('status').value;
+        
+        if (!teacherId || !date || !status) {
+            e.preventDefault();
+            alert('Please fill in all required fields (Teacher, Date, and Status).');
+            return false;
+        }
+        
+        // Confirm manual entry
+        if (!confirm('Are you sure you want to create a manual attendance entry? This will override automatic tracking.')) {
+            e.preventDefault();
+            return false;
+        }
+    });
+});
+</script>
+{% endblock %}

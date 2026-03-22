@@ -1,0 +1,2281 @@
+{% extends 'base.html' %}
+
+{% block title %}Student Dashboard - SMS{% endblock %}
+
+{% block content %}
+<!-- Dashboard Header - Ultra Premium Design -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="dashboard-header-ultra-premium">
+            <!-- Animated Background -->
+            <div class="header-bg-gradient"></div>
+            <div class="header-bg-pattern"></div>
+            <div class="header-floating-shapes">
+                <div class="shape shape-1"></div>
+                <div class="shape shape-2"></div>
+                <div class="shape shape-3"></div>
+                <div class="shape shape-4"></div>
+            </div>
+            
+            <!-- Content -->
+            <div class="header-content-ultra">
+                <!-- Top Right Actions -->
+                <div class="header-top-actions">
+                    <a href="{% url 'accounts:profile' %}" class="action-icon-btn" title="My Profile">
+                        <i class="fas fa-user-circle"></i>
+                    </a>
+                    <a href="{% url 'notifications:notification_list' %}" class="action-icon-btn" title="Notifications">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-badge"></span>
+                    </a>
+                </div>
+                
+                <div class="row align-items-center">
+                    <div class="col-lg-8 col-md-8">
+                        <div class="header-text-section text-start">
+                            <!-- Title Section -->
+                            <div class="title-section-ultra mb-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="icon-badge-ultra">
+                                        <i class="fas fa-graduation-cap"></i>
+                                        <div class="icon-pulse"></div>
+                                    </div>
+                                    <div class="ms-3">
+                                        <h1 class="dashboard-title-ultra">
+                                            Student Dashboard
+                                            <span class="title-sparkle">✨</span>
+                                        </h1>
+                                        <div class="title-line-ultra"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Welcome Section -->
+                            <div class="welcome-section-ultra">
+                                <div class="welcome-badge">
+                                    <i class="fas fa-star me-2"></i>
+                                    <span>Welcome back</span>
+                                </div>
+                                <h2 class="student-name-ultra">
+                                    <span class="name-highlight">{{ user.get_full_name|default:user.username }}</span>
+                                    <span class="wave-emoji">👋</span>
+                                </h2>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if profile_missing %}
+<div class="row">
+    <div class="col-12">
+        <div class="alert alert-warning alert-modern shadow-sm" role="alert">
+            <div class="d-flex align-items-start">
+                <div class="alert-icon me-3">
+                    <i class="fas fa-exclamation-triangle fa-2x"></i>
+                </div>
+                <div class="flex-grow-1">
+                    <h4 class="alert-heading mb-2">Profile Setup Required</h4>
+                    <p class="mb-2">Your student profile is not set up yet. Please contact the administrator to complete your profile setup and enrollment.</p>
+                    <hr class="my-3">
+                    <p class="mb-0">Once your profile is created and you're enrolled in a class, you'll be able to access all student features including attendance tracking, assignments, and grades.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+
+<!-- Fee Payment Warning -->
+{% if has_unpaid_fees %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+            <div class="d-flex align-items-start">
+                <div class="alert-icon me-3">
+                    <i class="fas fa-exclamation-circle fa-3x"></i>
+                </div>
+                <div class="flex-grow-1">
+                    <h4 class="alert-heading mb-2"><i class="fas fa-rupee-sign me-2"></i>Fee Payment Required</h4>
+                    <p class="mb-2"><strong>You have unpaid fees totaling: Rs. {{ total_unpaid_amount|floatformat:2 }}</strong></p>
+                    <hr class="my-3">
+                    <div class="mb-3">
+                        <h6>Outstanding Fees:</h6>
+                        <ul class="mb-2">
+                            {% for fee in unpaid_fees %}
+                            <li>
+                                {{ fee.fee_structure }} - 
+                                <strong class="text-danger">Rs. {{ fee.balance_amount|floatformat:2 }}</strong>
+                                (Due: {{ fee.fee_structure.due_date|date:"M d, Y" }})
+                                {% if fee.payment_status == 'overdue' %}
+                                <span class="badge bg-danger ms-2">OVERDUE</span>
+                                {% endif %}
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <p class="mb-2"><i class="fas fa-info-circle me-2"></i><strong>Important:</strong> You cannot view your exam results until all fees are paid.</p>
+                    <p class="mb-0"><i class="fas fa-phone me-2"></i>Please contact the administration office to make a payment.</p>
+                </div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Quick Stats Cards - Enhanced Professional Design -->
+<div class="row mb-4 g-4">
+    <!-- Attendance Card -->
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card-premium stat-card-attendance">
+            <div class="stat-card-inner">
+                <div class="stat-header-premium">
+                    <div class="icon-circle icon-circle-primary">
+                        <i class="fas fa-calendar-check"></i>
+                        <div class="icon-glow"></div>
+                    </div>
+                    <div class="stat-badge">
+                        {% if attendance_percentage >= 90 %}
+                            <span class="badge-excellent">Excellent</span>
+                        {% elif attendance_percentage >= 75 %}
+                            <span class="badge-good">Good</span>
+                        {% elif attendance_percentage >= 60 %}
+                            <span class="badge-average">Average</span>
+                        {% else %}
+                            <span class="badge-low">Low</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="stat-body-premium">
+                    <div class="stat-value-premium">
+                        <span class="stat-number-large">{{ attendance_percentage|floatformat:1|default:"0.0" }}</span>
+                        <span class="stat-unit">%</span>
+                    </div>
+                    <p class="stat-label-premium">Attendance Rate</p>
+                    <div class="stat-progress-premium">
+                        <div class="progress-track">
+                            <div class="progress-fill progress-fill-primary" 
+                                 style="width: {{ attendance_percentage|default:"0" }}%"
+                                 data-percentage="{{ attendance_percentage|default:"0" }}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-meta-premium">
+                        <i class="fas fa-check-circle me-1"></i>
+                        <span>{{ present_sessions }}/{{ total_sessions }} sessions</span>
+                    </div>
+                </div>
+                <div class="stat-wave stat-wave-primary"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Assignments Card -->
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card-premium stat-card-assignments">
+            <div class="stat-card-inner">
+                <div class="stat-header-premium">
+                    <div class="icon-circle icon-circle-warning">
+                        <i class="fas fa-tasks"></i>
+                        <div class="icon-glow"></div>
+                    </div>
+                    <div class="stat-badge">
+                        {% if recent_assignments|length > 0 %}
+                            <span class="badge-active">Active</span>
+                        {% else %}
+                            <span class="badge-none">None</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="stat-body-premium">
+                    <div class="stat-value-premium">
+                        <span class="stat-number-large">{{ recent_assignments|length|default:"0" }}</span>
+                    </div>
+                    <p class="stat-label-premium">Active Assignments</p>
+                    <div class="stat-detail-premium">
+                        <a href="{% url 'academic:student_assignments' %}" class="stat-link">
+                            <i class="fas fa-arrow-right me-1"></i>
+                            View all assignments
+                        </a>
+                    </div>
+                </div>
+                <div class="stat-wave stat-wave-warning"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Subjects Card -->
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card-premium stat-card-subjects">
+            <div class="stat-card-inner">
+                <div class="stat-header-premium">
+                    <div class="icon-circle icon-circle-success">
+                        <i class="fas fa-book"></i>
+                        <div class="icon-glow"></div>
+                    </div>
+                    <div class="stat-badge">
+                        <span class="badge-semester">Semester</span>
+                    </div>
+                </div>
+                <div class="stat-body-premium">
+                    <div class="stat-value-premium">
+                        <span class="stat-number-large">{{ current_subjects|length|default:"0" }}</span>
+                    </div>
+                    <p class="stat-label-premium">Current Subjects</p>
+                    <div class="stat-detail-premium">
+                        {% if enrollment %}
+                            <span class="text-muted">
+                                <i class="fas fa-graduation-cap me-1"></i>
+                                {{ enrollment.class_enrolled.name }}
+                            </span>
+                        {% else %}
+                            <span class="text-muted">Not enrolled</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="stat-wave stat-wave-success"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- GPA Card -->
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card-premium stat-card-gpa">
+            <div class="stat-card-inner">
+                <div class="stat-header-premium">
+                    <div class="icon-circle icon-circle-info">
+                        <i class="fas fa-chart-line"></i>
+                        <div class="icon-glow"></div>
+                    </div>
+                    <div class="stat-badge">
+                        {% if current_gpa > 0 %}
+                            {% if current_gpa >= 3.7 %}
+                                <span class="badge-excellent">A+</span>
+                            {% elif current_gpa >= 3.0 %}
+                                <span class="badge-good">B+</span>
+                            {% elif current_gpa >= 2.0 %}
+                                <span class="badge-average">C+</span>
+                            {% else %}
+                                <span class="badge-low">D</span>
+                            {% endif %}
+                        {% else %}
+                            <span class="badge-none">N/A</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="stat-body-premium">
+                    <div class="stat-value-premium">
+                        <span class="stat-number-large">{{ current_gpa|floatformat:2|default:"0.00" }}</span>
+                        <span class="stat-unit-small">/4.0</span>
+                    </div>
+                    <p class="stat-label-premium">Current GPA</p>
+                    <div class="stat-detail-premium">
+                        {% if current_gpa > 0 %}
+                            <span class="gpa-status">
+                                <i class="fas fa-star me-1"></i>
+                                {% if current_gpa >= 3.7 %}Excellent Performance{% elif current_gpa >= 3.0 %}Good Performance{% elif current_gpa >= 2.0 %}Average Performance{% else %}Needs Improvement{% endif %}
+                            </span>
+                        {% else %}
+                            <span class="text-muted">
+                                <i class="fas fa-info-circle me-1"></i>
+                                No exams yet
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="stat-wave stat-wave-info"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Section -->
+<div class="row mb-4">
+    <!-- Progress Chart -->
+    <div class="col-lg-8 mb-4">
+        <div class="card modern-card shadow-sm">
+            <div class="card-header modern-card-header bg-gradient-primary">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Your Progress This Week</h5>
+                    <span class="badge bg-white text-primary">This Week</span>
+                </div>
+            </div>
+            <div class="card-body p-4">
+                <div class="chart-container" style="position: relative; height: 300px;">
+                    <canvas id="progressChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Attendance Chart -->
+    <div class="col-lg-4 mb-4">
+        <div class="card modern-card shadow-sm">
+            <div class="card-header modern-card-header bg-gradient-success">
+                <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Attendance Summary</h5>
+            </div>
+            <div class="card-body p-4">
+                <div class="chart-container" style="position: relative; height: 250px;">
+                    <canvas id="attendanceChart"></canvas>
+                </div>
+                <div class="attendance-legend mt-4">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div class="d-flex align-items-center">
+                            <span class="legend-dot bg-success me-2"></span>
+                            <span class="legend-label">Present</span>
+                        </div>
+                        <span class="legend-value fw-bold">{{ present_sessions }} days</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                            <span class="legend-dot bg-danger me-2"></span>
+                            <span class="legend-label">Absent</span>
+                        </div>
+                        <span class="legend-value fw-bold">{{ absent_sessions }} days</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Academic Information Section (Full Width) -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card modern-card shadow-sm academic-info-card">
+            <div class="card-header modern-card-header bg-gradient-academic">
+                <h5 class="mb-0"><i class="fas fa-graduation-cap me-2"></i>Academic Information</h5>
+            </div>
+            <div class="card-body p-4 academic-info-body">
+                {% if enrollment %}
+                <div class="row g-4">
+                    <div class="col-lg-4 col-md-6">
+                        <div class="info-section-modern">
+                            <div class="info-section-header">
+                                <div class="info-section-icon">
+                                    <i class="fas fa-university"></i>
+                                </div>
+                                <h6 class="info-section-title-modern">Current Enrollment</h6>
+                            </div>
+                            <div class="info-list-modern">
+                                <div class="info-item-modern">
+                                    <span class="info-label-modern">Course</span>
+                                    <span class="info-value-modern">{{ enrollment.class_enrolled.course.name }}</span>
+                                </div>
+                                <div class="info-item-modern">
+                                    <span class="info-label-modern">Department</span>
+                                    <span class="info-value-modern">{{ enrollment.class_enrolled.course.department.name }}</span>
+                                </div>
+                                <div class="info-item-modern">
+                                    <span class="info-label-modern">Class</span>
+                                    <span class="info-value-modern">Year {{ enrollment.class_enrolled.year }}, Sem {{ enrollment.class_enrolled.semester }} - Sec {{ enrollment.class_enrolled.section }}</span>
+                                </div>
+                                <div class="info-item-modern">
+                                    <span class="info-label-modern">Academic Year</span>
+                                    <span class="info-value-modern">{{ enrollment.class_enrolled.academic_year.year }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-4 col-md-6">
+                        <div class="info-section-modern">
+                            <div class="info-section-header">
+                                <div class="info-section-icon">
+                                    <i class="fas fa-info-circle"></i>
+                                </div>
+                                <h6 class="info-section-title-modern">Course Details</h6>
+                            </div>
+                            <div class="info-list-modern">
+                                <div class="info-item-modern">
+                                    <span class="info-label-modern">Course Code</span>
+                                    <span class="info-value-modern">{{ enrollment.class_enrolled.course.code }}</span>
+                                </div>
+                                <div class="info-item-modern">
+                                    <span class="info-label-modern">Duration</span>
+                                    <span class="info-value-modern">{{ enrollment.class_enrolled.course.duration_years }} years</span>
+                                </div>
+                                <div class="info-item-modern">
+                                    <span class="info-label-modern">Department Code</span>
+                                    <span class="info-value-modern">{{ enrollment.class_enrolled.course.department.code }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-4 col-md-6">
+                        <div class="info-section-modern">
+                            <div class="info-section-header">
+                                <div class="info-section-icon">
+                                    <i class="fas fa-chalkboard-teacher"></i>
+                                </div>
+                                <h6 class="info-section-title-modern">Additional Information</h6>
+                            </div>
+                            <div class="info-list-modern">
+                                <div class="info-item-modern">
+                                    <span class="info-label-modern">Enrolled Since</span>
+                                    <span class="info-value-modern">{{ enrollment.enrollment_date|date:"M d, Y" }}</span>
+                                </div>
+                                {% if enrollment.class_enrolled.class_teacher %}
+                                <div class="info-item-modern">
+                                    <span class="info-label-modern">Class Teacher</span>
+                                    <span class="info-value-modern">
+                                        {% if enrollment.class_enrolled.class_teacher.user.first_name or enrollment.class_enrolled.class_teacher.user.last_name %}
+                                            {{ enrollment.class_enrolled.class_teacher.user.get_full_name }}
+                                        {% else %}
+                                            {{ enrollment.class_enrolled.class_teacher.user.username }}
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="empty-state-modern">
+                    <i class="fas fa-graduation-cap fa-4x mb-3"></i>
+                    <h5>No Enrollment Found</h5>
+                    <p class="text-muted">Please contact the administrator to complete your enrollment.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Profile and Attendance Row -->
+<div class="row mb-4">
+    <!-- Profile Card -->
+    <div class="col-lg-6 mb-4">
+        <div class="card modern-card shadow-sm h-100">
+            <div class="card-body p-4 text-center">
+                <div class="profile-avatar-container">
+                    {% if user.profile_picture %}
+                    <img src="{{ user.profile_picture.url }}" class="profile-avatar" alt="Profile Picture">
+                    {% else %}
+                    <div class="profile-avatar-placeholder">
+                        <i class="fas fa-user fa-3x"></i>
+                    </div>
+                    {% endif %}
+                    <div class="profile-status-badge">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                </div>
+                <h5 class="profile-name mt-3 mb-1">{{ user.get_full_name|default:user.username }}</h5>
+                {% if user.student_profile %}
+                <p class="profile-id text-muted mb-3">ID: {{ user.student_profile.student_id }}</p>
+                {% endif %}
+                <a href="{% url 'accounts:profile' %}" class="btn btn-primary btn-modern w-100">
+                    <i class="fas fa-user-edit me-2"></i>Edit Profile
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Attendance Summary Card -->
+    <div class="col-lg-6 mb-4">
+        <div class="card modern-card shadow-sm h-100">
+            <div class="card-header modern-card-header bg-gradient-info">
+                <h5 class="mb-0"><i class="fas fa-calendar-check me-2"></i>Attendance Summary</h5>
+            </div>
+            <div class="card-body p-4">
+                {% if total_sessions > 0 %}
+                <div class="attendance-stats">
+                    <div class="attendance-stat-item">
+                        <div class="attendance-stat-icon bg-success-light">
+                            <i class="fas fa-check text-success"></i>
+                        </div>
+                        <div class="attendance-stat-content">
+                            <h4 class="attendance-stat-value text-success">{{ present_sessions }}</h4>
+                            <p class="attendance-stat-label">Present</p>
+                        </div>
+                    </div>
+                    <div class="attendance-stat-item">
+                        <div class="attendance-stat-icon bg-danger-light">
+                            <i class="fas fa-times text-danger"></i>
+                        </div>
+                        <div class="attendance-stat-content">
+                            <h4 class="attendance-stat-value text-danger">{{ absent_sessions }}</h4>
+                            <p class="attendance-stat-label">Absent</p>
+                        </div>
+                    </div>
+                    <div class="attendance-stat-item">
+                        <div class="attendance-stat-icon bg-primary-light">
+                            <i class="fas fa-calendar text-primary"></i>
+                        </div>
+                        <div class="attendance-stat-content">
+                            <h4 class="attendance-stat-value text-primary">{{ total_sessions }}</h4>
+                            <p class="attendance-stat-label">Total Sessions</p>
+                        </div>
+                    </div>
+                </div>
+                
+                {% if attendance_percentage < 75 %}
+                <div class="alert alert-warning-modern mt-3">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <small><strong>Warning:</strong> Attendance below 75%</small>
+                </div>
+                {% endif %}
+                
+                <a href="{% url 'attendance:view_attendance' %}" class="btn btn-info btn-modern w-100 mt-3">
+                    <i class="fas fa-chart-bar me-2"></i>View Details
+                </a>
+                {% else %}
+                <div class="empty-state-modern">
+                    <i class="fas fa-calendar-times fa-3x mb-3"></i>
+                    <h6>No Records</h6>
+                    <p class="text-muted small">No attendance recorded yet</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Current Subjects Section (Full Width) -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card modern-card shadow-lg subjects-section-premium">
+            <div class="card-header modern-card-header bg-gradient-subjects">
+                <div class="d-flex justify-content-between align-items-center flex-wrap">
+                    <div class="d-flex align-items-center">
+                        <div class="header-icon-premium me-3">
+                            <i class="fas fa-book-open"></i>
+                            <div class="icon-glow-subjects"></div>
+                        </div>
+                        <div>
+                            <h5 class="mb-0">Current Subjects</h5>
+                            <small class="text-white-50">Your enrolled courses this semester</small>
+                        </div>
+                    </div>
+                    <span class="badge badge-subjects-count">
+                        <i class="fas fa-graduation-cap me-1"></i>
+                        {{ current_subjects|length }} Subject{{ current_subjects|length|pluralize }}
+                    </span>
+                </div>
+            </div>
+            <div class="card-body p-4 subjects-body-premium">
+                {% if current_subjects %}
+                <div class="subjects-grid-premium">
+                    {% for subject in current_subjects %}
+                    <div class="subject-card-premium">
+                        <div class="subject-card-inner">
+                            <div class="subject-card-header-premium">
+                                <div class="subject-icon-premium">
+                                    <i class="fas fa-book"></i>
+                                    <div class="subject-icon-bg"></div>
+                                </div>
+                                <div class="subject-credits-badge-premium">
+                                    <i class="fas fa-award me-1"></i>
+                                    {{ subject.credits }} Credits
+                                </div>
+                            </div>
+                            <div class="subject-card-body-premium">
+                                <h6 class="subject-name-premium">{{ subject.name }}</h6>
+                                <p class="subject-code-premium">
+                                    <i class="fas fa-hashtag"></i>
+                                    {{ subject.code }}
+                                </p>
+                            </div>
+                            <div class="subject-card-footer-premium">
+                                <div class="subject-progress-indicator">
+                                    <div class="progress-dot"></div>
+                                    <span>Active</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="subject-card-shine"></div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="empty-state-modern">
+                    <i class="fas fa-book fa-3x mb-3"></i>
+                    <h6>No Subjects Assigned</h6>
+                    <p class="text-muted">No subjects assigned for current semester</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card modern-card shadow-sm">
+            <div class="card-header modern-card-header bg-gradient-warning">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-tasks me-2"></i>Recent Assignments</h5>
+                    <a href="{% url 'academic:student_assignments' %}" class="btn btn-sm btn-light">
+                        <i class="fas fa-arrow-right me-1"></i>View All
+                    </a>
+                </div>
+            </div>
+            <div class="card-body p-4">
+                {% if recent_assignments %}
+                <div class="assignments-list-modern-fullwidth">
+                    {% for assignment in recent_assignments %}
+                    <div class="assignment-item-modern">
+                        <div class="assignment-item-left">
+                            <div class="assignment-icon-modern {% if assignment.due_date < today %}bg-danger{% else %}bg-primary{% endif %}">
+                                <i class="fas fa-file-alt"></i>
+                            </div>
+                            <div class="assignment-content-modern">
+                                <h6 class="assignment-title-modern">{{ assignment.title }}</h6>
+                                <p class="assignment-subject-modern">
+                                    <i class="fas fa-book me-1"></i>{{ assignment.subject.name }}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="assignment-item-right">
+                            <div class="assignment-due-date {% if assignment.due_date < today %}text-danger{% else %}text-primary{% endif %}">
+                                <i class="fas fa-calendar-alt me-1"></i>
+                                <span>{{ assignment.due_date|date:"M d, Y" }}</span>
+                            </div>
+                            {% if assignment.due_date < today %}
+                            <span class="badge badge-modern bg-danger">Overdue</span>
+                            {% else %}
+                            <span class="badge badge-modern bg-success">Active</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="empty-state-modern">
+                    <i class="fas fa-tasks fa-3x mb-3"></i>
+                    <h6>No Recent Assignments</h6>
+                    <p class="text-muted">Your teachers haven't assigned any work yet</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Upcoming Exams Section (Full Width) -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card modern-card shadow-sm">
+            <div class="card-header modern-card-header bg-gradient-info">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-clipboard-list me-2"></i>Upcoming Exams</h5>
+                    <a href="{% url 'examination:exam_list' %}" class="btn btn-sm btn-light">
+                        <i class="fas fa-arrow-right me-1"></i>View All
+                    </a>
+                </div>
+            </div>
+            <div class="card-body p-4">
+                {% if upcoming_exams %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th><i class="fas fa-book me-2"></i>Exam Name</th>
+                                <th><i class="fas fa-tag me-2"></i>Type</th>
+                                <th><i class="fas fa-calendar me-2"></i>Date</th>
+                                <th><i class="fas fa-clock me-2"></i>Time</th>
+                                <th><i class="fas fa-star me-2"></i>Total Marks</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for exam in upcoming_exams %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="exam-icon-modern bg-info me-3">
+                                            <i class="fas fa-file-alt text-white"></i>
+                                        </div>
+                                        <div>
+                                            <strong class="d-block">{{ exam.name }}</strong>
+                                            <small class="text-muted">{{ exam.subject.name }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-primary">{{ exam.exam_type.name }}</span>
+                                </td>
+                                <td>
+                                    <strong>{{ exam.exam_date|date:"M d, Y" }}</strong>
+                                </td>
+                                <td>
+                                    {{ exam.start_time|time:"g:i A" }} - {{ exam.end_time|time:"g:i A" }}
+                                </td>
+                                <td>
+                                    <span class="badge bg-success">{{ exam.total_marks }} marks</span>
+                                </td>
+                                <td>
+                                    {% if exam.exam_date == today %}
+                                    <span class="badge bg-danger">
+                                        <i class="fas fa-exclamation-circle me-1"></i>Today
+                                    </span>
+                                    {% else %}
+                                    <span class="badge bg-warning">
+                                        <i class="fas fa-clock me-1"></i>Upcoming
+                                    </span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="empty-state-modern">
+                    <i class="fas fa-clipboard-list fa-3x mb-3"></i>
+                    <h6>No Upcoming Exams</h6>
+                    <p class="text-muted">No exams scheduled at the moment</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions Section (Horizontal at Bottom) -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card modern-card shadow-sm">
+            <div class="card-header modern-card-header bg-gradient-secondary">
+                <h5 class="mb-0"><i class="fas fa-bolt me-2"></i>Quick Actions</h5>
+            </div>
+            <div class="card-body p-4">
+                <div class="quick-actions-horizontal">
+                    <a href="{% url 'academic:student_assignments' %}" class="quick-action-horizontal">
+                        <div class="quick-action-icon-horizontal bg-primary">
+                            <i class="fas fa-tasks"></i>
+                        </div>
+                        <span class="quick-action-text-horizontal">My Assignments</span>
+                    </a>
+                    <a href="{% url 'examination:exam_list' %}" class="quick-action-horizontal">
+                        <div class="quick-action-icon-horizontal bg-purple">
+                            <i class="fas fa-clipboard-list"></i>
+                        </div>
+                        <span class="quick-action-text-horizontal">Upcoming Exams</span>
+                    </a>
+                    <a href="{% url 'attendance:view_attendance' %}" class="quick-action-horizontal">
+                        <div class="quick-action-icon-horizontal bg-success">
+                            <i class="fas fa-calendar-check"></i>
+                        </div>
+                        <span class="quick-action-text-horizontal">View Attendance</span>
+                    </a>
+                    {% if has_unpaid_fees %}
+                    <div class="quick-action-horizontal" style="opacity: 0.6; cursor: not-allowed; background: #dc3545;" title="Pay fees to view results">
+                        <div class="quick-action-icon-horizontal bg-danger">
+                            <i class="fas fa-lock"></i>
+                        </div>
+                        <span class="quick-action-text-horizontal">View Results (Locked)</span>
+                    </div>
+                    {% else %}
+                    <a href="{% url 'examination:result_list' %}" class="quick-action-horizontal">
+                        <div class="quick-action-icon-horizontal bg-info">
+                            <i class="fas fa-chart-bar"></i>
+                        </div>
+                        <span class="quick-action-text-horizontal">View Results</span>
+                    </a>
+                    {% endif %}
+                    <a href="{% url 'notifications:notification_list' %}" class="quick-action-horizontal">
+                        <div class="quick-action-icon-horizontal bg-warning">
+                            <i class="fas fa-bell"></i>
+                        </div>
+                        <span class="quick-action-text-horizontal">Notifications</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endif %}
+
+
+<!-- Professional Student Dashboard Styles -->
+<style>
+/* Dashboard Header */
+.dashboard-header-student {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 2rem;
+    border-radius: 15px;
+    color: white;
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+}
+
+.dashboard-title-student {
+    font-size: 2rem;
+    font-weight: 700;
+    color: white;
+    margin: 0;
+}
+
+.dashboard-subtitle-student {
+    font-size: 1.1rem;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+/* Modern Alert */
+.alert-modern {
+    border: none;
+    border-radius: 12px;
+    border-left: 4px solid #ffc107;
+}
+
+.alert-icon {
+    color: #ffc107;
+}
+
+/* Stat Cards */
+.stat-card {
+    background: white;
+    border-radius: 15px;
+    padding: 1.5rem;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    border: none;
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    opacity: 0.1;
+    transition: all 0.3s ease;
+}
+
+.stat-card-primary::before {
+    background: #007bff;
+}
+
+.stat-card-warning::before {
+    background: #ffc107;
+}
+
+.stat-card-success::before {
+    background: #28a745;
+}
+
+.stat-card-info::before {
+    background: #17a2b8;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
+.stat-card:hover::before {
+    transform: scale(1.2);
+}
+
+.stat-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    margin-bottom: 1rem;
+    position: relative;
+    z-index: 1;
+}
+
+.stat-card-primary .stat-icon {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.stat-card-warning .stat-icon {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+}
+
+.stat-card-success .stat-icon {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    color: white;
+}
+
+.stat-card-info .stat-icon {
+    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    color: white;
+}
+
+.stat-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin: 0;
+    color: #2c3e50;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: #6c757d;
+    margin: 0.5rem 0;
+    font-weight: 500;
+}
+
+.stat-meta {
+    font-size: 0.75rem;
+    color: #adb5bd;
+}
+
+.stat-progress {
+    margin-top: 1rem;
+}
+
+.stat-progress .progress {
+    height: 6px;
+    border-radius: 10px;
+    background: #f1f3f5;
+}
+
+.stat-progress .progress-bar {
+    border-radius: 10px;
+}
+
+/* Modern Card */
+.modern-card {
+    border: none;
+    border-radius: 15px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.modern-card:hover {
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1) !important;
+}
+
+.modern-card-header {
+    border: none;
+    padding: 1.25rem 1.5rem;
+    color: white;
+    font-weight: 600;
+}
+
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.bg-gradient-success {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.bg-gradient-warning {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+/* Academic Information Section - Attractive Background */
+.bg-gradient-academic {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 50%, #4facfe 100%);
+    box-shadow: 0 8px 25px rgba(17, 153, 142, 0.3);
+    animation: academicGlow 3s ease-in-out infinite;
+}
+
+@keyframes academicGlow {
+    0%, 100% {
+        box-shadow: 0 8px 25px rgba(17, 153, 142, 0.3);
+    }
+    50% {
+        box-shadow: 0 10px 35px rgba(17, 153, 142, 0.5);
+    }
+}
+
+.academic-info-card {
+    border: none;
+    overflow: hidden;
+    position: relative;
+}
+
+.academic-info-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: linear-gradient(90deg, #11998e 0%, #38ef7d 50%, #4facfe 100%);
+    animation: shimmer 3s ease-in-out infinite;
+    background-size: 200% 100%;
+}
+
+@keyframes shimmer {
+    0%, 100% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+}
+
+.academic-info-body {
+    background: linear-gradient(135deg, rgba(17, 153, 142, 0.03) 0%, rgba(56, 239, 125, 0.03) 50%, rgba(79, 172, 254, 0.03) 100%);
+    position: relative;
+}
+
+.academic-info-body::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: 
+        radial-gradient(circle at 20% 50%, rgba(17, 153, 142, 0.05) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(56, 239, 125, 0.05) 0%, transparent 50%),
+        radial-gradient(circle at 40% 20%, rgba(79, 172, 254, 0.05) 0%, transparent 50%);
+    pointer-events: none;
+}
+
+.info-section-modern {
+    position: relative;
+    z-index: 1;
+}
+.bg-gradient-info {
+    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+}
+
+.bg-gradient-secondary {
+    background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+    color: #2c3e50 !important;
+}
+
+/* Info Section Modern */
+.info-section-modern {
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    border-radius: 12px;
+    padding: 1.5rem;
+    height: 100%;
+    border: 1px solid #e9ecef;
+}
+
+.info-section-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1.25rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.info-section-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.2rem;
+    margin-right: 0.75rem;
+}
+
+.info-section-title-modern {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin: 0;
+}
+
+.info-list-modern {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.info-item-modern {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #f1f3f5;
+    transition: all 0.2s ease;
+}
+
+.info-item-modern:hover {
+    border-color: #667eea;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
+}
+
+.info-label-modern {
+    font-weight: 600;
+    color: #6c757d;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+}
+
+.info-value-modern {
+    color: #2c3e50;
+    font-size: 0.85rem;
+    text-align: right;
+    font-weight: 500;
+    margin-left: 1rem;
+}
+
+/* ============================================
+   PREMIUM SUBJECTS SECTION
+   ============================================ */
+
+.subjects-section-premium {
+    border: none;
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.bg-gradient-subjects {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 35%, #f093fb 70%, #feca57 100%);
+    padding: 1.75rem 2rem;
+    box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
+    animation: subjectsGlow 3s ease-in-out infinite;
+}
+
+@keyframes subjectsGlow {
+    0%, 100% {
+        box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
+    }
+    50% {
+        box-shadow: 0 10px 35px rgba(255, 107, 107, 0.6);
+    }
+}
+
+.header-icon-premium {
+    width: 55px;
+    height: 55px;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.header-icon-premium i {
+    font-size: 1.5rem;
+    color: white;
+    z-index: 2;
+}
+
+.icon-glow-subjects {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 15px;
+    background: rgba(255, 255, 255, 0.3);
+    animation: iconPulse 2s infinite;
+}
+
+@keyframes iconPulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.1);
+        opacity: 0.5;
+    }
+}
+
+.badge-subjects-count {
+    background: rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(10px);
+    color: white;
+    padding: 0.6rem 1.2rem;
+    border-radius: 20px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+.subjects-body-premium {
+    background: linear-gradient(135deg, rgba(255, 107, 107, 0.03) 0%, rgba(238, 90, 111, 0.03) 35%, rgba(240, 147, 251, 0.03) 70%, rgba(254, 202, 87, 0.03) 100%);
+}
+
+.subjects-grid-premium {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.subject-card-premium {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    position: relative;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border: 2px solid #e9ecef;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.subject-card-premium:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 40px rgba(255, 107, 107, 0.25);
+    border-color: #ff6b6b;
+}
+
+.subject-card-inner {
+    padding: 1.75rem;
+    position: relative;
+    z-index: 2;
+}
+
+.subject-card-header-premium {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1.25rem;
+}
+
+.subject-icon-premium {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+    transition: all 0.3s ease;
+}
+
+.subject-card-premium:hover .subject-icon-premium {
+    transform: scale(1.1) rotate(5deg);
+    box-shadow: 0 8px 25px rgba(255, 107, 107, 0.5);
+}
+
+.subject-icon-premium i {
+    font-size: 1.75rem;
+    color: white;
+    z-index: 2;
+}
+
+.subject-icon-bg {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 14px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, transparent 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.subject-card-premium:hover .subject-icon-bg {
+    opacity: 1;
+}
+
+.subject-credits-badge-premium {
+    background: linear-gradient(135deg, #feca57 0%, #ff9ff3 100%);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    box-shadow: 0 4px 12px rgba(254, 202, 87, 0.4);
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.subject-card-body-premium {
+    margin-bottom: 1rem;
+}
+
+.subject-name-premium {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 0.75rem;
+    line-height: 1.4;
+    transition: color 0.3s ease;
+}
+
+.subject-card-premium:hover .subject-name-premium {
+    color: #ff6b6b;
+}
+
+.subject-code-premium {
+    font-size: 0.9rem;
+    color: #6c757d;
+    font-weight: 600;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #f8f9fa;
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    display: inline-flex;
+}
+
+.subject-code-premium i {
+    font-size: 0.75rem;
+    color: #ff6b6b;
+}
+
+.subject-card-footer-premium {
+    padding-top: 1rem;
+    border-top: 2px solid #f0f0f0;
+}
+
+.subject-progress-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    color: #10b981;
+    font-weight: 600;
+}
+
+.progress-dot {
+    width: 10px;
+    height: 10px;
+    background: #10b981;
+    border-radius: 50%;
+    animation: dotPulse 2s infinite;
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+}
+
+@keyframes dotPulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+    }
+    50% {
+        transform: scale(1.2);
+        box-shadow: 0 0 15px rgba(16, 185, 129, 0.8);
+    }
+}
+
+.subject-card-shine {
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(45deg, transparent, rgba(255,255,255,0.3), transparent);
+    transform: translateX(-100%);
+    transition: transform 0.6s ease;
+}
+
+.subject-card-premium:hover .subject-card-shine {
+    transform: translateX(100%);
+}
+
+/* Responsive Subjects Grid */
+@media (max-width: 1400px) {
+    .subjects-grid-premium {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    }
+}
+
+@media (max-width: 991px) {
+    .subjects-grid-premium {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.25rem;
+    }
+    
+    .subject-card-inner {
+        padding: 1.5rem;
+    }
+    
+    .subject-icon-premium {
+        width: 55px;
+        height: 55px;
+    }
+    
+    .subject-icon-premium i {
+        font-size: 1.5rem;
+    }
+}
+
+@media (max-width: 767px) {
+    .subjects-grid-premium {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .bg-gradient-subjects {
+        padding: 1.5rem 1.25rem;
+    }
+    
+    .header-icon-premium {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .header-icon-premium i {
+        font-size: 1.35rem;
+    }
+    
+    .badge-subjects-count {
+        font-size: 0.85rem;
+        padding: 0.5rem 1rem;
+    }
+}
+
+@media (max-width: 575px) {
+    .subject-card-inner {
+        padding: 1.25rem;
+    }
+    
+    .subject-icon-premium {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .subject-icon-premium i {
+        font-size: 1.35rem;
+    }
+    
+    .subject-name-premium {
+        font-size: 1.05rem;
+    }
+    
+    .subject-credits-badge-premium {
+        font-size: 0.8rem;
+        padding: 0.4rem 0.85rem;
+    }
+}
+
+/* Old Subjects Grid - Keep for backward compatibility */
+.subjects-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+.subjects-grid-fullwidth {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.25rem;
+}
+
+.subject-card-modern {
+    background: white;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    padding: 1.25rem;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.subject-card-modern::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+}
+
+.subject-card-modern:hover {
+    border-color: #4facfe;
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(79, 172, 254, 0.2);
+}
+
+.subject-card-modern:hover::before {
+    transform: scaleX(1);
+}
+
+.subject-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.subject-icon-modern {
+    width: 45px;
+    height: 45px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.3rem;
+}
+
+.subject-credits-badge {
+    background: rgba(79, 172, 254, 0.1);
+    color: #4facfe;
+    padding: 0.35rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.subject-card-body {
+    margin-top: 0.75rem;
+}
+
+.subject-name-modern {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+    line-height: 1.3;
+}
+
+.subject-code-modern {
+    font-size: 0.8rem;
+    color: #6c757d;
+    margin: 0;
+    font-weight: 500;
+}
+
+/* Assignments List Modern */
+.assignments-list-modern {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+/* Assignments List Modern Full Width */
+.assignments-list-modern-fullwidth {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
+    gap: 1rem;
+}
+
+.assignment-item-modern {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.25rem;
+    background: white;
+    border-radius: 12px;
+    border: 2px solid #e9ecef;
+    transition: all 0.3s ease;
+}
+
+.assignment-item-modern:hover {
+    border-color: #f093fb;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(240, 147, 251, 0.15);
+}
+
+.assignment-item-left {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    min-width: 0;
+}
+
+.assignment-icon-modern {
+    width: 45px;
+    height: 45px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.2rem;
+    margin-right: 1rem;
+    flex-shrink: 0;
+}
+
+.exam-icon-modern {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.assignment-content-modern {
+    flex: 1;
+    min-width: 0;
+}
+
+.assignment-title-modern {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 0.35rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.assignment-subject-modern {
+    font-size: 0.8rem;
+    color: #6c757d;
+    margin: 0;
+    display: flex;
+    align-items: center;
+}
+
+.assignment-item-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.5rem;
+    margin-left: 1rem;
+}
+
+.assignment-due-date {
+    font-size: 0.8rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+}
+
+.badge-modern {
+    padding: 0.35rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Profile Card */
+.profile-avatar-container {
+    position: relative;
+    display: inline-block;
+}
+
+.profile-avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 5px solid #f1f3f5;
+    object-fit: cover;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+}
+
+.profile-avatar-placeholder {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    box-shadow: 0 5px 20px rgba(102, 126, 234, 0.3);
+}
+
+.profile-status-badge {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    width: 30px;
+    height: 30px;
+    background: #28a745;
+    border-radius: 50%;
+    border: 3px solid white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 0.8rem;
+}
+
+.profile-name {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #2c3e50;
+}
+
+.profile-id {
+    font-size: 0.9rem;
+}
+
+/* Attendance Stats */
+.attendance-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.attendance-stat-item {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.attendance-stat-item:hover {
+    transform: translateX(5px);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+}
+
+.attendance-stat-icon {
+    width: 45px;
+    height: 45px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    margin-right: 1rem;
+}
+
+.bg-success-light {
+    background: rgba(40, 167, 69, 0.1);
+}
+
+.bg-danger-light {
+    background: rgba(220, 53, 69, 0.1);
+}
+
+.bg-primary-light {
+    background: rgba(0, 123, 255, 0.1);
+}
+
+.attendance-stat-content {
+    flex-grow: 1;
+}
+
+.attendance-stat-value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.attendance-stat-label {
+    font-size: 0.85rem;
+    color: #6c757d;
+    margin: 0;
+}
+
+.alert-warning-modern {
+    background: rgba(255, 193, 7, 0.1);
+    border: 1px solid rgba(255, 193, 7, 0.3);
+    border-radius: 10px;
+    padding: 0.75rem;
+    color: #856404;
+}
+
+/* Quick Actions Horizontal */
+.quick-actions-horizontal {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.quick-action-horizontal {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem 1rem;
+    background: white;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.quick-action-horizontal:hover {
+    border-color: #667eea;
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.2);
+    color: inherit;
+    text-decoration: none;
+}
+
+.quick-action-icon-horizontal {
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    transition: all 0.3s ease;
+}
+
+.bg-purple {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.quick-action-horizontal:hover .quick-action-icon-horizontal {
+    transform: scale(1.1);
+}
+
+.quick-action-text-horizontal {
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 0.95rem;
+}
+
+/* Quick Actions Student (Old Vertical Style - Keep for backward compatibility) */
+.quick-actions-student {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.quick-action-student {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    background: white;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.3s ease;
+}
+
+.quick-action-student:hover {
+    border-color: #667eea;
+    transform: translateX(5px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+    color: inherit;
+    text-decoration: none;
+}
+
+.quick-action-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1rem;
+    margin-right: 1rem;
+}
+
+.quick-action-text {
+    flex-grow: 1;
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 0.9rem;
+}
+
+.quick-action-arrow {
+    color: #adb5bd;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.quick-action-student:hover .quick-action-arrow {
+    color: #667eea;
+    transform: translateX(3px);
+}
+
+/* Modern Button */
+.btn-modern {
+    border-radius: 10px;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    border: none;
+}
+
+.btn-modern:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Empty State */
+.empty-state-modern {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #adb5bd;
+}
+
+.empty-state-modern i {
+    opacity: 0.5;
+}
+
+.empty-state-modern h5,
+.empty-state-modern h6 {
+    color: #6c757d;
+    margin-top: 1rem;
+}
+
+/* Responsive Design */
+@media (max-width: 992px) {
+    .dashboard-title-student {
+        font-size: 1.5rem;
+    }
+    
+    .stat-value {
+        font-size: 2rem;
+    }
+    
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        font-size: 1.5rem;
+    }
+}
+
+/* Chart Styles */
+.chart-container {
+    position: relative;
+}
+
+.attendance-legend {
+    border-top: 2px solid #f1f3f5;
+    padding-top: 1rem;
+}
+
+.legend-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.legend-label {
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+.legend-value {
+    font-size: 0.9rem;
+    color: #2c3e50;
+}
+
+@media (max-width: 768px) {
+    .dashboard-header-student {
+        padding: 1.5rem;
+    }
+    
+    .stat-card {
+        margin-bottom: 1rem;
+    }
+    
+    /* Modern Info Items */
+    .info-item-modern {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .info-value-modern {
+        text-align: left;
+        margin-left: 0;
+    }
+    
+    /* Assignment Items */
+    .assignment-item-modern {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
+    .assignment-item-left {
+        width: 100%;
+    }
+    
+    .assignment-item-right {
+        width: 100%;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        margin-left: 0;
+    }
+    
+    /* Assignments Full Width Grid */
+    .assignments-list-modern-fullwidth {
+        grid-template-columns: 1fr;
+    }
+    
+    /* Subjects Grid */
+    .subjects-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    /* Subjects Grid Full Width */
+    .subjects-grid-fullwidth {
+        grid-template-columns: 1fr;
+    }
+    
+    /* Info Section Header */
+    .info-section-header {
+        flex-direction: row;
+        align-items: center;
+    }
+    
+    .info-section-icon {
+        margin-right: 0.75rem;
+        margin-bottom: 0;
+    }
+    
+    /* Quick Actions Horizontal - Stack on Mobile */
+    .quick-actions-horizontal {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
+    
+    .quick-action-horizontal {
+        padding: 1rem 0.75rem;
+    }
+    
+    .quick-action-icon-horizontal {
+        width: 50px;
+        height: 50px;
+        font-size: 1.2rem;
+        margin-bottom: 0.75rem;
+    }
+    
+    .quick-action-text-horizontal {
+        font-size: 0.85rem;
+    }
+    
+    /* Profile and Attendance Cards on Mobile */
+    .col-lg-6.mb-4 {
+        margin-bottom: 1rem !important;
+    }
+}
+
+@media (max-width: 480px) {
+    /* Stack Quick Actions Vertically on Very Small Screens */
+    .quick-actions-horizontal {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (min-width: 769px) and (max-width: 1200px) {
+    /* Tablet landscape - 2 columns for assignments */
+    .assignments-list-modern-fullwidth {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    /* Tablet landscape - 3 columns for subjects */
+    .subjects-grid-fullwidth {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (min-width: 1201px) {
+    /* Desktop - 3 columns for assignments */
+    .assignments-list-modern-fullwidth {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    
+    /* Desktop - 4 columns for subjects */
+    .subjects-grid-fullwidth {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+@media (min-width: 1400px) {
+    /* Large Desktop - 5 columns for subjects */
+    .subjects-grid-fullwidth {
+        grid-template-columns: repeat(5, 1fr);
+    }
+}
+</style>
+
+<!-- Chart.js Library -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Chart Data -->
+{{ chart_data_json|safe }}
+
+<!-- Initialize Charts -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Check if chart data exists
+    if (typeof window.studentChartData === 'undefined') {
+        console.log('No chart data available');
+        return;
+    }
+    
+    const chartData = window.studentChartData;
+    
+    // Progress Chart (Line Chart)
+    const progressCtx = document.getElementById('progressChart');
+    if (progressCtx && chartData.progressData && chartData.progressData.length > 0) {
+        const colors = [
+            { border: '#667eea', bg: 'rgba(102, 126, 234, 0.1)' },
+            { border: '#f093fb', bg: 'rgba(240, 147, 251, 0.1)' },
+            { border: '#4facfe', bg: 'rgba(79, 172, 254, 0.1)' },
+            { border: '#43e97b', bg: 'rgba(67, 233, 123, 0.1)' }
+        ];
+        
+        const datasets = chartData.progressData.map((subject, index) => ({
+            label: subject.label,
+            data: subject.data,
+            borderColor: colors[index % colors.length].border,
+            backgroundColor: colors[index % colors.length].bg,
+            borderWidth: 3,
+            tension: 0.4,
+            fill: true,
+            pointRadius: 4,
+            pointHoverRadius: 6,
+            pointBackgroundColor: '#fff',
+            pointBorderWidth: 2
+        }));
+        
+        new Chart(progressCtx, {
+            type: 'line',
+            data: {
+                labels: chartData.days,
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            usePointStyle: true,
+                            padding: 15,
+                            font: {
+                                size: 12,
+                                family: "'Inter', sans-serif"
+                            }
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        padding: 12,
+                        titleFont: {
+                            size: 14
+                        },
+                        bodyFont: {
+                            size: 13
+                        },
+                        cornerRadius: 8
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        min: 60,
+                        max: 100,
+                        ticks: {
+                            stepSize: 5,
+                            font: {
+                                size: 11
+                            }
+                        },
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)',
+                            drawBorder: false
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            font: {
+                                size: 11
+                            }
+                        },
+                        grid: {
+                            display: false,
+                            drawBorder: false
+                        }
+                    }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                }
+            }
+        });
+    }
+    
+    // Attendance Chart (Doughnut Chart)
+    const attendanceCtx = document.getElementById('attendanceChart');
+    if (attendanceCtx && chartData.attendanceData) {
+        const attendanceData = chartData.attendanceData;
+        
+        new Chart(attendanceCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Present', 'Absent'],
+                datasets: [{
+                    data: [attendanceData.present, attendanceData.absent],
+                    backgroundColor: ['#28a745', '#dc3545'],
+                    borderWidth: 0,
+                    cutout: '75%'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        padding: 12,
+                        cornerRadius: 8,
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.parsed || 0;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                return label + ': ' + value + ' days (' + percentage + '%)';
+                            }
+                        }
+                    }
+                },
+                // Center text plugin
+                plugins: [{
+                    beforeDraw: function(chart) {
+                        const width = chart.width;
+                        const height = chart.height;
+                        const ctx = chart.ctx;
+                        ctx.restore();
+                        
+                        const fontSize = (height / 114).toFixed(2);
+                        ctx.font = 'bold ' + fontSize + 'em Inter, sans-serif';
+                        ctx.textBaseline = 'middle';
+                        
+                        const text = attendanceData.percentage + '%';
+                        const textX = Math.round((width - ctx.measureText(text).width) / 2);
+                        const textY = height / 2 - 10;
+                        
+                        ctx.fillStyle = '#2c3e50';
+                        ctx.fillText(text, textX, textY);
+                        
+                        ctx.font = (fontSize * 0.4) + 'em Inter, sans-serif';
+                        ctx.fillStyle = '#6c757d';
+                        const subText = 'Present';
+                        const subTextX = Math.round((width - ctx.measureText(subText).width) / 2);
+                        const subTextY = height / 2 + 20;
+                        ctx.fillText(subText, subTextX, subTextY);
+                        
+                        ctx.save();
+                    }
+                }]
+            }
+        });
+    }
+});
+</script>
+
+{% endblock %}

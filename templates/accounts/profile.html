@@ -1,0 +1,217 @@
+{% extends 'base.html' %}
+
+{% block title %}Profile - SMS{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2><i class="fas fa-user"></i> My Profile</h2>
+        <p class="text-muted">View and manage your profile information</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-4 mb-4">
+        <div class="card shadow">
+            <div class="card-body text-center">
+                {% if user.profile_picture %}
+                    <img src="{{ user.profile_picture.url }}" class="rounded-circle mb-3" width="150" height="150">
+                {% else %}
+                    <div class="bg-secondary rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 150px; height: 150px;">
+                        <i class="fas fa-user fa-4x text-white"></i>
+                    </div>
+                {% endif %}
+                <h4>{{ user.get_full_name|default:user.username }}</h4>
+                <p class="text-muted">{{ user.get_user_type_display }}</p>
+                <button class="btn btn-primary">Edit Profile Picture</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8 mb-4">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h6 class="m-0"><i class="fas fa-info-circle"></i> Personal Information</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label"><strong>Username:</strong></label>
+                        <p>{{ user.username }}</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label"><strong>Email:</strong></label>
+                        <p>{{ user.email }}</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label"><strong>First Name:</strong></label>
+                        <p>{{ user.first_name|default:"Not provided" }}</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label"><strong>Last Name:</strong></label>
+                        <p>{{ user.last_name|default:"Not provided" }}</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label"><strong>Phone Number:</strong></label>
+                        <p>{{ user.phone_number|default:"Not provided" }}</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label"><strong>Date of Birth:</strong></label>
+                        <p>{{ user.date_of_birth|default:"Not provided" }}</p>
+                    </div>
+                    <div class="col-12 mb-3">
+                        <label class="form-label"><strong>Address:</strong></label>
+                        <p>{{ user.address|default:"Not provided" }}</p>
+                    </div>
+                </div>
+                <button class="btn btn-success">Edit Personal Information</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if profile %}
+<div class="row">
+    <div class="col-12 mb-4">
+        <div class="card shadow">
+            <div class="card-header bg-info text-white">
+                <h6 class="m-0">
+                    <i class="fas fa-id-card"></i> 
+                    {% if user.user_type == 'student' %}Student Information
+                    {% elif user.user_type == 'teacher' %}Teacher Information
+                    {% elif user.user_type == 'parent' %}Parent Information
+                    {% elif user.user_type == 'admin' %}Admin Information
+                    {% endif %}
+                </h6>
+            </div>
+            <div class="card-body">
+                {% if user.user_type == 'student' %}
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label"><strong>Student ID:</strong></label>
+                            <p>{{ profile.student_id }}</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label"><strong>Admission Date:</strong></label>
+                            <p>{{ profile.admission_date|default:"Not provided" }}</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label"><strong>Guardian Name:</strong></label>
+                            <p>{{ profile.guardian_name|default:"Not provided" }}</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label"><strong>Guardian Phone:</strong></label>
+                            <p>{{ profile.guardian_phone|default:"Not provided" }}</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label"><strong>Guardian Email:</strong></label>
+                            <p>{{ profile.guardian_email|default:"Not provided" }}</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label"><strong>Emergency Contact:</strong></label>
+                            <p>{{ profile.emergency_contact|default:"Not provided" }}</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label"><strong>Blood Group:</strong></label>
+                            <p>{{ profile.blood_group|default:"Not provided" }}</p>
+                        </div>
+                    </div>
+                {% elif user.user_type == 'teacher' %}
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label"><strong>Employee ID:</strong></label>
+                            <p>{{ profile.employee_id }}</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label"><strong>Qualification:</strong></label>
+                            <p>{{ profile.qualification|default:"Not provided" }}</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label"><strong>Experience:</strong></label>
+                            <p>{{ profile.experience_years }} years</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label"><strong>Specialization:</strong></label>
+                            <p>{{ profile.specialization|default:"Not provided" }}</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label"><strong>Joining Date:</strong></label>
+                            <p>{{ profile.joining_date|default:"Not provided" }}</p>
+                        </div>
+                    </div>
+                {% elif user.user_type == 'parent' %}
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label"><strong>Occupation:</strong></label>
+                            <p>{{ profile.occupation|default:"Not provided" }}</p>
+                        </div>
+                        <div class="col-12 mb-3">
+                            <label class="form-label"><strong>Children:</strong></label>
+                            {% if profile.children.all %}
+                                <ul class="list-group">
+                                    {% for child in profile.children.all %}
+                                        <li class="list-group-item">
+                                            {{ child.user.get_full_name }} ({{ child.student_id }})
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                <p>No children linked</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% elif user.user_type == 'admin' %}
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label"><strong>Employee ID:</strong></label>
+                            <p>{{ profile.employee_id }}</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label"><strong>Department:</strong></label>
+                            <p>{{ profile.department|default:"Not provided" }}</p>
+                        </div>
+                    </div>
+                {% endif %}
+                <button class="btn btn-warning">Edit Profile Information</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header bg-secondary text-white">
+                <h6 class="m-0"><i class="fas fa-cog"></i> Account Settings</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label"><strong>Account Status:</strong></label>
+                        <p>
+                            {% if user.is_active %}
+                                <span class="badge bg-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-danger">Inactive</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label"><strong>Member Since:</strong></label>
+                        <p>{{ user.date_joined|date:"F d, Y" }}</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label"><strong>Last Updated:</strong></label>
+                        <p>{{ user.updated_at|date:"F d, Y g:i A" }}</p>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <button class="btn btn-danger">Change Password</button>
+                    <button class="btn btn-outline-secondary">Download Profile Data</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

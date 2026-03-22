@@ -1,0 +1,236 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ tenant.name }} - Tenant Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="mb-0">{{ organization_name }}</h1>
+                    <p class="text-muted mb-0">Organization Dashboard</p>
+                </div>
+                <div class="text-right">
+                    <a href="{% url 'saas:tenant_settings' %}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-cog"></i> Settings
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Subscription Status -->
+    {% if subscription %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert {% if subscription.is_active %}alert-success{% else %}alert-warning{% endif %}">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-1">
+                            <i class="fas fa-{% if subscription.is_active %}check-circle{% else %}exclamation-triangle{% endif %}"></i>
+                            Current Plan: <strong>{{ subscription.plan.name }}</strong>
+                        </h5>
+                        <p class="mb-0 small">
+                            {% if subscription.is_active %}
+                                Active until {{ subscription.end_date|date:"F d, Y" }}
+                            {% else %}
+                                Plan expired or inactive
+                            {% endif %}
+                        </p>
+                    </div>
+                    <a href="{% url 'saas:tenant_subscription' %}" class="btn btn-outline-primary btn-sm">
+                        Manage Plan
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Key Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted mb-1 small">Total Users</p>
+                            <h3 class="mb-0">{{ total_users }}</h3>
+                        </div>
+                        <i class="fas fa-users fa-2x text-primary opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted mb-1 small">Students</p>
+                            <h3 class="mb-0">{{ total_students }}</h3>
+                        </div>
+                        <i class="fas fa-book fa-2x text-success opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted mb-1 small">Teachers</p>
+                            <h3 class="mb-0">{{ total_teachers }}</h3>
+                        </div>
+                        <i class="fas fa-chalkboard-user fa-2x text-info opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted mb-1 small">Courses</p>
+                            <h3 class="mb-0">{{ total_courses }}</h3>
+                        </div>
+                        <i class="fas fa-graduation-cap fa-2x text-warning opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Breakdown -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">User Statistics</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        <div class="list-group-item d-flex justify-content-between">
+                            <span>Administrators</span>
+                            <strong>{{ total_admins }}</strong>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between">
+                            <span>Students</span>
+                            <strong>{{ total_students }}</strong>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between">
+                            <span>Teachers</span>
+                            <strong>{{ total_teachers }}</strong>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between">
+                            <span>Parents</span>
+                            <strong>{{ total_parents }}</strong>
+                        </div>
+                    </div>
+                    <a href="{% url 'saas:tenant_users' %}" class="btn btn-outline-primary btn-sm w-100 mt-3">
+                        Manage Users
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Organization Info</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label text-muted small mb-1">Organization Name</label>
+                        <p class="mb-3">{{ organization.name }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted small mb-1">Subdomain</label>
+                        <p class="mb-3">{{ organization.subdomain }}.local</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted small mb-1">Member Since</label>
+                        <p class="mb-0">{{ organization.created_at|date:"F d, Y" }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Users -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Recent Users</h5>
+                    <a href="{% url 'saas:tenant_users' %}" class="btn btn-sm btn-link">View All</a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Type</th>
+                                    <th>Joined</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in recent_users %}
+                                <tr>
+                                    <td>
+                                        {% if user.first_name %}
+                                            {{ user.first_name }} {{ user.last_name }}
+                                        {% else %}
+                                            {{ user.username }}
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ user.email }}</td>
+                                    <td>
+                                        <span class="badge bg-{% if user.user_type == 'student' %}info{% elif user.user_type == 'teacher' %}warning{% elif user.user_type == 'parent' %}success{% else %}secondary{% endif %}">
+                                            {{ user.get_user_type_display }}
+                                        </span>
+                                    </td>
+                                    <td>{{ user.date_joined|date:"M d, Y" }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-3 text-muted">
+                                        No users yet. <a href="{% url 'saas:tenant_users' %}">Add users</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Database Info (Development Only) -->
+    {% if debug %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="alert alert-secondary mb-0">
+                <small>
+                    <strong>Debug Info (Development Only):</strong><br>
+                    Organization ID: {{ organization.id }}<br>
+                    Slug: {{ organization_slug }}<br>
+                    Database: tenant_{{ organization.id }} at db_{{ organization_slug }}.sqlite3
+                </small>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,184 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ assignment.title }} - SMS{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-tasks"></i> {{ assignment.title }}</h2>
+            <div>
+                <a href="{% url 'academic:assignment_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Assignments
+                </a>
+                {% if user.user_type == 'teacher' and assignment.teacher == user.teacher_profile %}
+                <a href="{% url 'academic:edit_assignment' assignment.id %}" class="btn btn-warning">
+                    <i class="fas fa-edit"></i> Edit Assignment
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Assignment Details -->
+<div class="row mb-4">
+    <div class="col-lg-8">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h6 class="m-0"><i class="fas fa-info-circle"></i> Assignment Details</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Subject:</strong> {{ assignment.subject.name }}</p>
+                        <p><strong>Class:</strong> {{ assignment.class_assigned.name }}</p>
+                        <p><strong>Type:</strong> {{ assignment.assignment_type|title }}</p>
+                        <p><strong>Maximum Marks:</strong> {{ assignment.max_marks }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Assigned Date:</strong> {{ assignment.assigned_date|date:"M d, Y g:i A" }}</p>
+                        <p><strong>Due Date:</strong> 
+                            <span class="{% if assignment.due_date < today %}text-danger{% else %}text-info{% endif %}">
+                                {{ assignment.due_date|date:"M d, Y g:i A" }}
+                            </span>
+                        </p>
+                        <p><strong>Status:</strong> 
+                            {% if assignment.is_active %}
+                                <span class="badge bg-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <h6>Description:</h6>
+                <p>{{ assignment.description|linebreaks }}</p>
+                
+                {% if assignment.instructions %}
+                <h6>Instructions:</h6>
+                <p>{{ assignment.instructions|linebreaks }}</p>
+                {% endif %}
+                
+                {% if assignment.attachment %}
+                <h6>Attachment:</h6>
+                <p><a href="{{ assignment.attachment.url }}" class="btn btn-outline-primary btn-sm" target="_blank">
+                    <i class="fas fa-download"></i> Download Attachment
+                </a></p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <h6 class="m-0"><i class="fas fa-chart-pie"></i> Submission Statistics</h6>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6 mb-3">
+                        <h4 class="text-success">{{ submitted_count }}</h4>
+                        <small class="text-muted">Submitted</small>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <h4 class="text-warning">{{ pending_count }}</h4>
+                        <small class="text-muted">Pending</small>
+                    </div>
+                    <div class="col-12">
+                        <h4 class="text-primary">{{ total_students }}</h4>
+                        <small class="text-muted">Total Students</small>
+                    </div>
+                </div>
+                
+                {% if total_students > 0 %}
+                <div class="progress mt-3">
+                    <div class="progress-bar bg-success" style="width: {{ submission_percentage }}%">
+                        {{ submission_percentage }}%
+                    </div>
+                </div>
+                <small class="text-muted">Submission Rate</small>
+                {% endif %}
+                
+                <div class="mt-3">
+                    <a href="{% url 'academic:assignment_submissions' assignment.id %}" class="btn btn-primary btn-sm w-100">
+                        <i class="fas fa-file-alt"></i> View All Submissions
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Submissions -->
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header bg-info text-white">
+                <h6 class="m-0"><i class="fas fa-clock"></i> Recent Submissions</h6>
+            </div>
+            <div class="card-body">
+                {% if submissions %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Student</th>
+                                <th>Submitted At</th>
+                                <th>Status</th>
+                                <th>Marks</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for submission in submissions|slice:":10" %}
+                            <tr>
+                                <td>{{ submission.student.user.get_full_name|default:submission.student.user.username }}</td>
+                                <td>{{ submission.submitted_at|date:"M d, Y g:i A" }}</td>
+                                <td>
+                                    {% if submission.is_late %}
+                                        <span class="badge bg-warning">Late</span>
+                                    {% else %}
+                                        <span class="badge bg-success">On Time</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if submission.marks_obtained %}
+                                        {{ submission.marks_obtained }}/{{ assignment.max_marks }}
+                                    {% else %}
+                                        <span class="text-muted">Not graded</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="#" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                {% if submissions.count > 10 %}
+                <div class="text-center mt-3">
+                    <a href="{% url 'academic:assignment_submissions' assignment.id %}" class="btn btn-primary">
+                        View All {{ submissions.count }} Submissions
+                    </a>
+                </div>
+                {% endif %}
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                    <h6 class="text-muted">No Submissions Yet</h6>
+                    <p class="text-muted">Students haven't started submitting their work</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

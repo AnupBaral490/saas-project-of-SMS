@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Sign Up - Student Management SaaS{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-body">
+                    <h2 class="card-title mb-4">Create Your Organization</h2>
+                    <p class="text-muted mb-4">Join Student Management System and start managing your school in minutes</p>
+                    
+                    <form method="post" id="signup-form">
+                        {% csrf_token %}
+                        
+                        <div class="form-group">
+                            <label for="id_org_name">Organization Name <span class="text-danger">*</span></label>
+                            <input type="text" 
+                                   name="org_name" 
+                                   id="id_org_name"
+                                   class="form-control"
+                                   placeholder="e.g., Sos Herman Gmeiner School"
+                                   maxlength="200"
+                                   required>
+                            <small class="form-text text-muted">The name of your school or organization</small>
+                            {% if form.errors.org_name %}
+                                <div class="invalid-feedback d-block">{{ form.errors.org_name.0 }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="id_subdomain">Subdomain <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="text" 
+                                       name="subdomain" 
+                                       id="id_subdomain"
+                                       class="form-control"
+                                       placeholder="auto-generated"
+                                       readonly>
+                                <div class="input-group-append">
+                                    <span class="input-group-text">.localhost:8000</span>
+                                </div>
+                            </div>
+                            <small class="form-text text-muted">
+                                Auto-generated from your organization name. Your school will be accessible at <code id="full-url">yourschool.localhost:8000</code>
+                            </small>
+                            <div id="subdomain-feedback"></div>
+                            {% if form.errors.subdomain %}
+                                <div class="invalid-feedback d-block">{{ form.errors.subdomain.0 }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="id_contact_email">Contact Email <span class="text-danger">*</span></label>
+                            <input type="email" 
+                                   name="contact_email" 
+                                   id="id_contact_email"
+                                   class="form-control"
+                                   placeholder="you@example.com"
+                                   required>
+                            {% if form.errors.contact_email %}
+                                <div class="invalid-feedback d-block">{{ form.errors.contact_email.0 }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="id_contact_phone">Phone (Optional)</label>
+                            <input type="text" 
+                                   name="contact_phone" 
+                                   id="id_contact_phone"
+                                   class="form-control"
+                                   placeholder="Your phone number"
+                                   maxlength="20">
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary btn-lg btn-block">
+                            Continue to Step 2
+                        </button>
+                    </form>
+                    
+                    <hr>
+                    <p class="text-muted text-center">
+                        Already have an account? <a href="{% url 'accounts:login' %}">Sign in here</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Auto-generate slug from organization name
+document.getElementById('id_org_name').addEventListener('input', function() {
+    let orgName = this.value;
+    
+    if (orgName.trim().length === 0) {
+        document.getElementById('id_subdomain').value = '';
+        document.getElementById('full-url').textContent = 'yourschool.localhost:8000';
+        return;
+    }
+    
+    // Convert to slug: lowercase, remove special chars, replace spaces with hyphens
+    let slug = orgName
+        .toLowerCase()
+        .replace(/[^\w\s-]/g, '')           // Remove special characters
+        .replace(/\s+/g, '-')                // Replace spaces with hyphens
+        .replace(/-+/g, '-')                 // Replace multiple hyphens with single
+        .replace(/^-+|-+$/g, '');            // Remove leading/trailing hyphens
+    
+    // Limit to 63 characters (DNS requirement)
+    slug = slug.substring(0, 63);
+    
+    document.getElementById('id_subdomain').value = slug;
+    document.getElementById('full-url').textContent = slug + '.localhost:8000';
+    
+    // Real-time subdomain availability check
+    if (slug.length >= 3) {
+        fetch(`/billing/api/check-subdomain/?subdomain=${slug}`)
+            .then(r => r.json())
+            .then(data => {
+                let feedback = document.getElementById('subdomain-feedback');
+                let subdomainInput = document.getElementById('id_subdomain');
+                
+                if (data.available) {
+                    feedback.innerHTML = '<small class="text-success"><i class="fas fa-check-circle"></i> ✓ Available!</small>';
+                    subdomainInput.classList.remove('is-invalid');
+                    subdomainInput.classList.add('is-valid');
+                } else {
+                    feedback.innerHTML = '<small class="text-danger"><i class="fas fa-times-circle"></i> ✗ ' + data.message + '</small>';
+                    subdomainInput.classList.remove('is-valid');
+                    subdomainInput.classList.add('is-invalid');
+                }
+            })
+            .catch(err => {
+                console.error('Subdomain check failed:', err);
+            });
+    }
+});
+
+// Trigger on page load in case form has errors
+document.getElementById('id_org_name').dispatchEvent(new Event('input'));
+</script>
+
+<style>
+form .form-group label span.text-danger {
+    margin-left: 2px;
+}
+</style>
+{% endblock %}

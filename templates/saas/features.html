@@ -1,0 +1,269 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Features - Student Management System{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Features Header -->
+    <div class="text-center mb-5">
+        <h1 class="display-4 mb-3">Powerful Features for Modern Schools</h1>
+        <p class="lead text-muted">Everything you need to manage your school efficiently</p>
+    </div>
+
+    <!-- Core Features -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body">
+                    <i class="fas fa-clock fa-3x text-primary mb-3"></i>
+                    <h5 class="card-title">Attendance Management</h5>
+                    <p class="card-text">Track student and teacher attendance in real-time with geofencing support and automated reporting.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body">
+                    <i class="fas fa-graduation-cap fa-3x text-success mb-3"></i>
+                    <h5 class="card-title">Grade Management</h5>
+                    <p class="card-text">Record and track student grades, generate transcripts, and monitor academic performance easily.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body">
+                    <i class="fas fa-money-bill-wave fa-3x text-warning mb-3"></i>
+                    <h5 class="card-title">Fee Management</h5>
+                    <p class="card-text">Manage student fees, track payments, generate invoices, and send payment reminders automatically.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body">
+                    <i class="fas fa-chart-bar fa-3x text-info mb-3"></i>
+                    <h5 class="card-title">Advanced Reports</h5>
+                    <p class="card-text">Generate comprehensive reports on attendance, performance, fees, and more for informed decision-making.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body">
+                    <i class="fas fa-code fa-3x text-danger mb-3"></i>
+                    <h5 class="card-title">API Access</h5>
+                    <p class="card-text">Integrate with third-party systems using our comprehensive REST API and webhooks.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body">
+                    <i class="fas fa-comments fa-3x text-secondary mb-3"></i>
+                    <h5 class="card-title">Messaging System</h5>
+                    <p class="card-text">Communicate securely with students, parents, and teachers through integrated messaging.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Key Benefits -->
+    <div class="bg-light p-5 rounded mb-5">
+        <h3 class="mb-4">Why Schools Choose Us</h3>
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="d-flex mb-3">
+                    <i class="fas fa-check-circle text-success me-3 mt-1" style="font-size: 1.5rem;"></i>
+                    <div>
+                        <h5>Easy to Use</h5>
+                        <p class="text-muted mb-0">Intuitive interface requires minimal training for staff and students.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="d-flex mb-3">
+                    <i class="fas fa-check-circle text-success me-3 mt-1" style="font-size: 1.5rem;"></i>
+                    <div>
+                        <h5>Secure & Compliant</h5>
+                        <p class="text-muted mb-0">Industry-grade security with data encryption and compliance certifications.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="d-flex mb-3">
+                    <i class="fas fa-check-circle text-success me-3 mt-1" style="font-size: 1.5rem;"></i>
+                    <div>
+                        <h5>Multi-Tenant Architecture</h5>
+                        <p class="text-muted mb-0">Complete data isolation and organization-specific configuration.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="d-flex mb-3">
+                    <i class="fas fa-check-circle text-success me-3 mt-1" style="font-size: 1.5rem;"></i>
+                    <div>
+                        <h5>24/7 Support</h5>
+                        <p class="text-muted mb-0">Dedicated support team available round-the-clock for assistance.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="d-flex mb-3">
+                    <i class="fas fa-check-circle text-success me-3 mt-1" style="font-size: 1.5rem;"></i>
+                    <div>
+                        <h5>Cloud-Based</h5>
+                        <p class="text-muted mb-0">Access from anywhere, anytime with automatic backups and updates.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="d-flex mb-3">
+                    <i class="fas fa-check-circle text-success me-3 mt-1" style="font-size: 1.5rem;"></i>
+                    <div>
+                        <h5>Mobile Responsive</h5>
+                        <p class="text-muted mb-0">Works seamlessly on tablets and smartphones for mobile-first access.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feature Matrix by Plan -->
+    <h3 class="mb-4">Feature Availability by Plan</h3>
+    <div class="table-responsive mb-5">
+        <table class="table table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>Feature</th>
+                    {% for plan in plans %}
+                    <th class="text-center">{{ plan.name }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Max Students</strong></td>
+                    {% for plan in plans %}
+                    <td class="text-center">
+                        {% if plan.max_students %}
+                            <strong>{{ plan.max_students }}</strong>
+                        {% else %}
+                            <i class="fas fa-infinity text-success"></i>
+                        {% endif %}
+                    </td>
+                    {% endfor %}
+                </tr>
+                <tr>
+                    <td><strong>Max Teachers</strong></td>
+                    {% for plan in plans %}
+                    <td class="text-center">
+                        {% if plan.max_teachers %}
+                            <strong>{{ plan.max_teachers }}</strong>
+                        {% else %}
+                            <i class="fas fa-infinity text-success"></i>
+                        {% endif %}
+                    </td>
+                    {% endfor %}
+                </tr>
+                <tr>
+                    <td><strong>Attendance Tracking</strong></td>
+                    {% for plan in plans %}
+                    <td class="text-center">
+                        <i class="fas fa-check text-success fa-lg"></i>
+                    </td>
+                    {% endfor %}
+                </tr>
+                <tr>
+                    <td><strong>Grade Management</strong></td>
+                    {% for plan in plans %}
+                    <td class="text-center">
+                        <i class="fas fa-check text-success fa-lg"></i>
+                    </td>
+                    {% endfor %}
+                </tr>
+                <tr>
+                    <td><strong>Fee Management</strong></td>
+                    {% for plan in plans %}
+                    <td class="text-center">
+                        {% if plan.feature_flags.fee_management %}
+                            <i class="fas fa-check text-success fa-lg"></i>
+                        {% else %}
+                            <i class="fas fa-times text-danger fa-lg"></i>
+                        {% endif %}
+                    </td>
+                    {% endfor %}
+                </tr>
+                <tr>
+                    <td><strong>Advanced Reports</strong></td>
+                    {% for plan in plans %}
+                    <td class="text-center">
+                        {% if plan.feature_flags.advanced_reports %}
+                            <i class="fas fa-check text-success fa-lg"></i>
+                        {% else %}
+                            <i class="fas fa-times text-danger fa-lg"></i>
+                        {% endif %}
+                    </td>
+                    {% endfor %}
+                </tr>
+                <tr>
+                    <td><strong>API Access</strong></td>
+                    {% for plan in plans %}
+                    <td class="text-center">
+                        {% if plan.feature_flags.api_access %}
+                            <i class="fas fa-check text-success fa-lg"></i>
+                        {% else %}
+                            <i class="fas fa-times text-danger fa-lg"></i>
+                        {% endif %}
+                    </td>
+                    {% endfor %}
+                </tr>
+                <tr>
+                    <td><strong>Priority Support</strong></td>
+                    {% for plan in plans %}
+                    <td class="text-center">
+                        {% if plan.code == 'free' %}
+                            <i class="fas fa-times text-danger fa-lg"></i>
+                        {% else %}
+                            <i class="fas fa-check text-success fa-lg"></i>
+                        {% endif %}
+                    </td>
+                    {% endfor %}
+                </tr>
+                <tr>
+                    <td><strong>Custom Branding</strong></td>
+                    {% for plan in plans %}
+                    <td class="text-center">
+                        {% if plan.code == 'enterprise' %}
+                            <i class="fas fa-check text-success fa-lg"></i>
+                        {% else %}
+                            <i class="fas fa-times text-danger fa-lg"></i>
+                        {% endif %}
+                    </td>
+                    {% endfor %}
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- CTA Section -->
+    <div class="bg-primary text-white p-5 rounded text-center">
+        <h3 class="mb-3">Experience the Power of Our Platform</h3>
+        <p class="mb-4">Start your free trial today. No credit card required.</p>
+        <a href="{% url 'saas:signup_step1_organization' %}" class="btn btn-light btn-lg">
+            Start Free Trial
+        </a>
+    </div>
+</div>
+{% endblock %}

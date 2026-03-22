@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+
+{% block title %}Choose Your Plan - Student Management SaaS{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="mb-4 text-center">Step 3 of 4: Choose Your Plan</h2>
+            <div class="alert alert-info text-center">
+                <strong>Organization:</strong> {{ organization.name }}
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        {% for plan in plans %}
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="card h-100 {% if plan.code == 'professional' %}border-primary shadow-lg{% endif %}">
+                {% if plan.code == 'professional' %}
+                <div class="card-header bg-primary text-white text-center">
+                    <span class="badge badge-light">POPULAR</span>
+                </div>
+                {% endif %}
+                
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">{{ plan.name }}</h5>
+                    <p class="text-muted small">{{ plan.description }}</p>
+                    
+                    <div class="my-3">
+                        <h3 class="text-primary">
+                            {% if plan.price == 0 %}
+                                Free
+                            {% else %}
+                                ${{ plan.price }}<span class="text-muted small">/mo</span>
+                            {% endif %}
+                        </h3>
+                    </div>
+                    
+                    <ul class="list-unstyled small flex-grow-1">
+                        <li class="my-2">
+                            <i class="fas fa-users text-success"></i>
+                            Students: 
+                            <strong>
+                                {% if plan.max_students %}{{ plan.max_students }}{% else %}Unlimited{% endif %}
+                            </strong>
+                        </li>
+                        <li class="my-2">
+                            <i class="fas fa-chalkboard-user text-success"></i>
+                            Teachers: 
+                            <strong>
+                                {% if plan.max_teachers %}{{ plan.max_teachers }}{% else %}Unlimited{% endif %}
+                            </strong>
+                        </li>
+                        <li class="my-2">
+                            <i class="fas fa-crown text-success"></i>
+                            Admins: 
+                            <strong>
+                                {% if plan.max_admins %}{{ plan.max_admins }}{% else %}Unlimited{% endif %}
+                            </strong>
+                        </li>
+                    </ul>
+                    
+                    <form method="post" class="w-100">
+                        {% csrf_token %}
+                        <input type="hidden" name="plan" value="{{ plan.id }}">
+                        <button type="submit" class="btn btn-primary w-100">
+                            {% if plan.price == 0 %}
+                                Get Started Free
+                            {% else %}
+                                Start Free Trial
+                            {% endif %}
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <div class="row mt-5">
+        <div class="col-12">
+            <h4 class="mb-3">Features by Plan</h4>
+            <table class="table table-sm table-bordered">
+                <thead>
+                    <tr>
+                        <th>Feature</th>
+                        {% for plan in plans %}
+                        <th class="text-center">{{ plan.name }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Attendance Tracking</td>
+                        {% for plan in plans %}
+                        <td class="text-center">
+                            {% if plan.feature_flags.attendance_tracking %}<i class="fas fa-check text-success"></i>{% else %}<i class="fas fa-times text-danger"></i>{% endif %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td>Grade Management</td>
+                        {% for plan in plans %}
+                        <td class="text-center">
+                            {% if plan.feature_flags.grade_management %}<i class="fas fa-check text-success"></i>{% else %}<i class="fas fa-times text-danger"></i>{% endif %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td>Fee Management</td>
+                        {% for plan in plans %}
+                        <td class="text-center">
+                            {% if plan.feature_flags.fee_management %}<i class="fas fa-check text-success"></i>{% else %}<i class="fas fa-times text-danger"></i>{% endif %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td>Advanced Reports</td>
+                        {% for plan in plans %}
+                        <td class="text-center">
+                            {% if plan.feature_flags.advanced_reports %}<i class="fas fa-check text-success"></i>{% else %}<i class="fas fa-times text-danger"></i>{% endif %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td>API Access</td>
+                        {% for plan in plans %}
+                        <td class="text-center">
+                            {% if plan.feature_flags.api_access %}<i class="fas fa-check text-success"></i>{% else %}<i class="fas fa-times text-danger"></i>{% endif %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

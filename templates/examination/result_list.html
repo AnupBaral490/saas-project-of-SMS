@@ -1,0 +1,401 @@
+{% extends 'base.html' %}
+
+{% block title %}Exam Results - SMS{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2><i class="fas fa-chart-bar"></i> Exam Results</h2>
+                <p class="text-muted">View and manage examination results</p>
+            </div>
+            {% if user.user_type == 'admin' or user.user_type == 'teacher' %}
+            <div>
+                <a href="{% url 'examination:exam_list' %}" class="btn btn-primary btn-lg me-2">
+                    <i class="fas fa-list"></i> View All Exams
+                </a>
+                <a href="{% url 'examination:create_exam' %}" class="btn btn-success btn-lg">
+                    <i class="fas fa-plus-circle"></i> Create New Exam
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Fee Payment Warning for Students -->
+{% if user.user_type == 'student' and has_unpaid_fees %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="alert alert-danger shadow-lg" role="alert">
+            <div class="d-flex align-items-start">
+                <div class="me-4">
+                    <i class="fas fa-lock fa-4x"></i>
+                </div>
+                <div class="flex-grow-1">
+                    <h3 class="alert-heading mb-3">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Results Access Restricted
+                    </h3>
+                    <h5 class="mb-3">You have unpaid fees totaling: <strong>Rs. {{ total_unpaid_amount|floatformat:2 }}</strong></h5>
+                    <hr class="my-3">
+                    <div class="mb-3">
+                        <h6><i class="fas fa-list me-2"></i>Outstanding Fees:</h6>
+                        <ul class="mb-3">
+                            {% for fee in unpaid_fees %}
+                            <li class="mb-2">
+                                <strong>{{ fee.fee_structure }}</strong> - 
+                                <span class="badge bg-danger fs-6">Rs. {{ fee.balance_amount|floatformat:2 }}</span>
+                                <br>
+                                <small>Due Date: {{ fee.fee_structure.due_date|date:"M d, Y" }}</small>
+                                {% if fee.payment_status == 'overdue' %}
+                                <span class="badge bg-dark ms-2">OVERDUE</span>
+                                {% elif fee.payment_status == 'partial' %}
+                                <span class="badge bg-warning ms-2">PARTIALLY PAID</span>
+                                {% endif %}
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <div class="alert alert-warning mb-3">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Important:</strong> Your exam results are currently hidden due to unpaid fees. 
+                        Please clear all outstanding payments to view your results.
+                    </div>
+                    <div class="d-flex gap-3">
+                        <div>
+                            <i class="fas fa-phone-alt me-2"></i>
+                            <strong>Contact Administration:</strong> Visit the admin office to make a payment
+                        </div>
+                        <div>
+                            <i class="fas fa-envelope me-2"></i>
+                            <strong>Or:</strong> Contact your class teacher for assistance
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Empty Results Message -->
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header bg-secondary text-white">
+                <h6 class="m-0"><i class="fas fa-lock"></i> Results Locked</h6>
+            </div>
+            <div class="card-body text-center py-5">
+                <i class="fas fa-lock fa-5x text-muted mb-4"></i>
+                <h4 class="text-muted mb-3">Results are currently unavailable</h4>
+                <p class="text-muted">Please clear your outstanding fees to access your exam results.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% else %}
+
+{% if user.user_type == 'admin' or user.user_type == 'teacher' %}
+<!-- Quick Actions for Teachers -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="alert alert-info d-flex align-items-center" role="alert">
+            <i class="fas fa-info-circle fa-2x me-3"></i>
+            <div class="flex-grow-1">
+                <h5 class="alert-heading mb-2">How to Enter Grades</h5>
+                <p class="mb-2">1. Click "View All Exams" to see your exams, or "Create New Exam" to make a new one</p>
+                <p class="mb-0">2. Click "Enter Results" button next to any exam to enter student grades</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Filter Section -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <form class="row g-3" method="get">
+                    <div class="col-md-3">
+                        <label for="examFilter" class="form-label">Exam</label>
+                        <select class="form-select" id="examFilter" name="exam">
+                            <option value="">All Exams</option>
+                            {% for result in results %}
+                                <option value="{{ result.examination.id }}">{{ result.examination.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    {% if user.user_type == 'admin' or user.user_type == 'teacher' %}
+                    <div class="col-md-3">
+                        <label for="classFilter" class="form-label">Class</label>
+                        <select class="form-select" id="classFilter" name="class">
+                            <option value="">All Classes</option>
+                            {% for result in results %}
+                                <option value="{{ result.examination.class_for.id }}">{{ result.examination.class_for.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="studentFilter" class="form-label">Student</label>
+                        <select class="form-select" id="studentFilter" name="student">
+                            <option value="">All Students</option>
+                            {% for result in results %}
+                                <option value="{{ result.student.id }}">
+                                    {% if result.student.user.first_name or result.student.user.last_name %}
+                                        {{ result.student.user.first_name }} {{ result.student.user.last_name }}
+                                    {% else %}
+                                        {{ result.student.user.username }}
+                                    {% endif %}
+                                    ({{ result.student.student_id }})
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    {% endif %}
+                    <div class="col-md-3">
+                        <label class="form-label">&nbsp;</label>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search"></i> Filter
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Results Summary -->
+{% if user.user_type == 'student' and student_stats %}
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body text-center">
+                <h4>{{ student_stats.gpa }}</h4>
+                <small>Current GPA</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body text-center">
+                <h4>{{ student_stats.total_exams }}</h4>
+                <small>Exams Taken</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body text-center">
+                <h4>{{ student_stats.average_percentage }}%</h4>
+                <small>Average Score</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body text-center">
+                <h4>{{ student_stats.overall_grade }}</h4>
+                <small>Overall Grade</small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Results Table -->
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header bg-info text-white">
+                <h6 class="m-0"><i class="fas fa-table"></i> Examination Results</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                {% if user.user_type == 'admin' or user.user_type == 'teacher' %}
+                                <th>Student</th>
+                                <th>Student ID</th>
+                                {% endif %}
+                                <th>Exam</th>
+                                <th>Subject</th>
+                                <th>Date</th>
+                                <th>Marks Obtained</th>
+                                <th>Total Marks</th>
+                                <th>Percentage</th>
+                                <th>Grade</th>
+                                <th>Status</th>
+                                {% if user.user_type == 'admin' or user.user_type == 'teacher' %}
+                                <th>Actions</th>
+                                {% endif %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for result in results %}
+                            <tr>
+                                {% if user.user_type == 'admin' or user.user_type == 'teacher' %}
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 35px; height: 35px;">
+                                            <i class="fas fa-user text-white"></i>
+                                        </div>
+                                        <strong>
+                                            {% if result.student.user.first_name or result.student.user.last_name %}
+                                                {{ result.student.user.first_name }} {{ result.student.user.last_name }}
+                                            {% else %}
+                                                {{ result.student.user.username }}
+                                            {% endif %}
+                                        </strong>
+                                    </div>
+                                </td>
+                                <td>{{ result.student.student_id }}</td>
+                                {% endif %}
+                                <td>{{ result.examination.name }}</td>
+                                <td>{{ result.examination.subject.name }}</td>
+                                <td>{{ result.examination.exam_date|date:"M d, Y" }}</td>
+                                <td>{{ result.marks_obtained }}</td>
+                                <td>{{ result.examination.total_marks }}</td>
+                                <td>
+                                    <div class="progress" style="height: 20px;">
+                                        <div class="progress-bar {% if result.percentage >= 80 %}bg-success{% elif result.percentage >= 60 %}bg-warning{% else %}bg-danger{% endif %}" style="width: {{ result.percentage }}%">{{ result.percentage }}%</div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge {% if result.grade == 'A+' or result.grade == 'A' %}bg-success{% elif result.grade == 'B+' or result.grade == 'B' %}bg-warning{% elif result.grade == 'C+' or result.grade == 'C' %}bg-info{% else %}bg-danger{% endif %}">
+                                        {{ result.grade }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge {% if result.is_passed %}bg-success{% else %}bg-danger{% endif %}">
+                                        {% if result.is_passed %}Passed{% else %}Failed{% endif %}
+                                    </span>
+                                </td>
+                                {% if user.user_type == 'admin' or user.user_type == 'teacher' %}
+                                <td>
+                                    <a href="{% url 'examination:enter_results' result.examination.id %}" class="btn btn-sm btn-outline-primary" title="Edit Result">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                </td>
+                                {% endif %}
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="{% if user.user_type == 'admin' or user.user_type == 'teacher' %}11{% else %}8{% endif %}" class="text-center text-muted py-4">
+                                    <i class="fas fa-inbox fa-2x mb-2"></i><br>
+                                    No exam results found.
+                                    {% if user.user_type == 'student' %}
+                                        <br><small>Results will appear here once your teachers enter them.</small>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Export Options -->
+                {% if user.user_type == 'admin' or user.user_type == 'teacher' %}
+                <div class="mt-3">
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-outline-success">
+                            <i class="fas fa-file-excel"></i> Export Excel
+                        </button>
+                        <button type="button" class="btn btn-outline-danger">
+                            <i class="fas fa-file-pdf"></i> Export PDF
+                        </button>
+                        <button type="button" class="btn btn-outline-primary">
+                            <i class="fas fa-print"></i> Print Report
+                        </button>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Grade Distribution Chart (for teachers/admin) -->
+{% if user.user_type == 'admin' or user.user_type == 'teacher' %}
+<div class="row mt-4">
+    <div class="col-lg-6">
+        <div class="card shadow">
+            <div class="card-header bg-secondary text-white">
+                <h6 class="m-0"><i class="fas fa-chart-pie"></i> Grade Distribution</h6>
+            </div>
+            <div class="card-body">
+                <canvas id="gradeChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h6 class="m-0"><i class="fas fa-chart-line"></i> Performance Trends</h6>
+            </div>
+            <div class="card-body">
+                <canvas id="trendChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Grade Distribution Chart
+const gradeCtx = document.getElementById('gradeChart').getContext('2d');
+const gradeChart = new Chart(gradeCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['A+', 'A', 'B+', 'B', 'C+', 'C', 'D', 'F'],
+        datasets: [{
+            data: [15, 25, 20, 18, 12, 7, 2, 1],
+            backgroundColor: [
+                '#28a745', '#20c997', '#17a2b8', '#ffc107',
+                '#fd7e14', '#dc3545', '#6f42c1', '#343a40'
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+
+// Performance Trends Chart
+const trendCtx = document.getElementById('trendChart').getContext('2d');
+const trendChart = new Chart(trendCtx, {
+    type: 'line',
+    data: {
+        labels: ['Quiz 1', 'Mid-term', 'Quiz 2', 'Assignment', 'Final'],
+        datasets: [{
+            label: 'Class Average',
+            data: [78, 82, 85, 80, 84],
+            borderColor: 'rgb(75, 192, 192)',
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            tension: 0.1
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true,
+                max: 100
+            }
+        }
+    }
+});
+</script>
+{% endif %}
+{% endif %}
+{% endblock %}

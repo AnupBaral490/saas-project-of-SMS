@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+{% block title %}Payment - Student Management SaaS{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Step 4 of 4: Payment Method</h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <strong>Plan:</strong> {{ plan.name }} - ${{ plan.price }}/month<br>
+                        <small class="text-muted">{{ plan.trial_days }}-day free trial, then ${{ plan.price }}/month</small>
+                    </div>
+                    
+                    <form method="post" id="payment-form">
+                        {% csrf_token %}
+                        
+                        <div class="form-group">
+                            <label for="card-element">Card Information</label>
+                            <div id="card-element" class="form-control" style="height: 40px; padding: 10px;"></div>
+                            <small class="form-text text-muted">Your card information is secure and encrypted</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input" required>
+                                <span class="custom-control-label">
+                                    I agree to the <a href="#" target="_blank">terms of service</a> and 
+                                    <a href="#" target="_blank">privacy policy</a>
+                                </span>
+                            </label>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary btn-lg btn-block" id="submit-btn">
+                            Start Free Trial
+                        </button>
+                    </form>
+                    
+                    <hr>
+                    <p class="text-muted text-center small">
+                        No payment required during the trial period. You'll be asked to add a payment method when your trial ends.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+    const stripe = Stripe('{{ stripe_public_key }}');
+    const elements = stripe.elements();
+    const cardElement = elements.create('card');
+    
+    cardElement.mount('#card-element');
+    
+    cardElement.addEventListener('change', function(event) {
+        const displayError = document.getElementById('card-errors');
+        if (event.error) {
+            displayError.textContent = event.error.message;
+        } else {
+            displayError.textContent = '';
+        }
+    });
+    
+    document.getElementById('payment-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const submitBtn = document.getElementById('submit-btn');
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Processing...';
+        
+        const {token} = await stripe.createToken(cardElement);
+        
+        if (token) {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'stripeToken';
+            input.value = token.id;
+            this.appendChild(input);
+            this.submit();
+        } else {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Start Free Trial';
+            displayError.textContent = 'Payment token creation failed';
+        }
+    });
+</script>
+{% endblock %}

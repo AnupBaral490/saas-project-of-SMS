@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+
+{% block title %}Contact Teachers - SMS{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2><i class="fas fa-comments"></i> Contact Teachers</h2>
+        <p class="text-muted">Send messages to your children's teachers</p>
+    </div>
+</div>
+
+{% if children %}
+<div class="row">
+    <div class="col-12 mb-4">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="m-0"><i class="fas fa-chalkboard-teacher me-2"></i> Your Children's Teachers</h5>
+            </div>
+            <div class="card-body">
+                {% if teachers_data %}
+                <div class="row">
+                    {% for teacher_info in teachers_data %}
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        <div class="card h-100 teacher-card">
+                            <div class="card-body">
+                                <div class="text-center mb-3">
+                                    {% if teacher_info.teacher.user.profile_picture %}
+                                    <img src="{{ teacher_info.teacher.user.profile_picture.url }}" class="rounded-circle mb-2" style="width: 80px; height: 80px; object-fit: cover;" alt="{{ teacher_info.teacher.user.get_full_name }}">
+                                    {% else %}
+                                    <div class="avatar-circle mb-2">
+                                        <i class="fas fa-user-tie fa-3x"></i>
+                                    </div>
+                                    {% endif %}
+                                    <h5 class="mb-1">
+                                        {% if teacher_info.teacher.user.first_name or teacher_info.teacher.user.last_name %}
+                                            {{ teacher_info.teacher.user.get_full_name }}
+                                        {% else %}
+                                            {{ teacher_info.teacher.user.username }}
+                                        {% endif %}
+                                    </h5>
+                                    <p class="text-muted small mb-0"><i class="fas fa-id-badge me-1"></i>ID: {{ teacher_info.teacher.employee_id }}</p>
+                                </div>
+                                
+                                <div class="teacher-info">
+                                    <p class="mb-2"><strong>Subjects:</strong></p>
+                                    <div class="mb-3">
+                                        {% for subject in teacher_info.subjects %}
+                                        <span class="badge bg-info me-1 mb-1">{{ subject.name }}</span>
+                                        {% endfor %}
+                                    </div>
+                                    
+                                    <p class="mb-2"><strong>Teaching:</strong></p>
+                                    <div class="mb-3">
+                                        {% for child in teacher_info.children %}
+                                        <span class="badge bg-success me-1 mb-1">{{ child.user.get_full_name }}</span>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                
+                                <a href="{% url 'accounts:send_message_to_teacher' teacher_info.teacher.id %}" class="btn btn-primary w-100">
+                                    <i class="fas fa-envelope me-2"></i> Send Message
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-user-slash fa-4x text-muted mb-3"></i>
+                    <h5 class="text-muted">No Teachers Found</h5>
+                    <p class="text-muted">Your children are not enrolled in any classes yet.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <h5 class="m-0"><i class="fas fa-inbox me-2"></i> Recent Messages</h5>
+            </div>
+            <div class="card-body">
+                <a href="{% url 'accounts:message_inbox' %}" class="btn btn-success">
+                    <i class="fas fa-inbox me-2"></i> View All Messages
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% else %}
+<div class="alert alert-warning">
+    <i class="fas fa-exclamation-triangle me-2"></i>
+    <strong>No Children Linked</strong><br>
+    Please contact the administrator to link your children to your account.
+</div>
+{% endif %}
+
+<style>
+.teacher-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid #e0e0e0;
+}
+
+.teacher-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+.avatar-circle {
+    width: 80px;
+    height: 80px;
+    background: #f0f0f0;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #666;
+}
+
+.teacher-info {
+    min-height: 150px;
+}
+</style>
+
+{% endblock %}

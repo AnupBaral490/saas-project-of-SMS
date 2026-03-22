@@ -1,0 +1,290 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block title %}{{ title }} | {{ site_title|default:"Django site admin" }}{% endblock %}
+
+{% block extrahead %}
+<style>
+.teacher-reports-dashboard {
+    padding: 20px;
+}
+
+.filter-form {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.filter-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    align-items: end;
+}
+
+.summary-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.summary-card {
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    text-align: center;
+}
+
+.summary-number {
+    font-size: 2rem;
+    font-weight: bold;
+    margin: 5px 0;
+}
+
+.summary-label {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.reports-table {
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.reports-table table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+
+.reports-table th,
+.reports-table td {
+    padding: 8px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+    vertical-align: top;
+}
+
+.reports-table th {
+    background: #f8f9fa;
+    font-weight: 600;
+}
+
+.status-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    color: white;
+}
+
+.status-present { background: #28a745; }
+.status-absent { background: #dc3545; }
+.status-late { background: #ffc107; color: #000; }
+.status-half_day { background: #fd7e14; }
+.status-on_leave { background: #17a2b8; }
+
+.form-control {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 14px;
+}
+
+.btn-primary { background: #007cba; color: white; }
+.btn-success { background: #28a745; color: white; }
+.btn-info { background: #17a2b8; color: white; }
+
+.btn:hover {
+    opacity: 0.9;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="teacher-reports-dashboard">
+    <h1>{{ title }}</h1>
+    
+    <!-- Filter Form -->
+    <div class="filter-form">
+        <form method="get">
+            <div class="filter-row">
+                <div>
+                    <label for="teacher">Teacher:</label>
+                    <select name="teacher" id="teacher" class="form-control">
+                        <option value="">All Teachers</option>
+                        {% for teacher in teachers %}
+                        <option value="{{ teacher.id }}" {% if selected_teacher == teacher.id|stringformat:"s" %}selected{% endif %}>
+                            {{ teacher.user.get_full_name|default:teacher.user.username }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div>
+                    <label for="start_date">Start Date:</label>
+                    <input type="date" name="start_date" id="start_date" value="{{ start_date }}" class="form-control">
+                </div>
+                
+                <div>
+                    <label for="end_date">End Date:</label>
+                    <input type="date" name="end_date" id="end_date" value="{{ end_date }}" class="form-control">
+                </div>
+                
+                <div>
+                    <label for="status">Status:</label>
+                    <select name="status" id="status" class="form-control">
+                        <option value="">All Status</option>
+                        {% for value, label in status_choices %}
+                        <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div>
+                    <button type="submit" class="btn btn-primary">Filter</button>
+                    <a href="{% url 'admin:attendance_teacherattendance_dashboard' %}" class="btn btn-info">Dashboard</a>
+                </div>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Summary Statistics -->
+    <div class="summary-stats">
+        <div class="summary-card">
+            <div class="summary-number">{{ total_records }}</div>
+            <div class="summary-label">Total Records</div>
+        </div>
+        
+        <div class="summary-card">
+            <div class="summary-number">{{ present_records }}</div>
+            <div class="summary-label">Present</div>
+        </div>
+        
+        <div class="summary-card">
+            <div class="summary-number">{{ absent_records }}</div>
+            <div class="summary-label">Absent</div>
+        </div>
+        
+        <div class="summary-card">
+            <div class="summary-number">{{ late_records }}</div>
+            <div class="summary-label">Late</div>
+        </div>
+        
+        <div class="summary-card">
+            <div class="summary-number">{{ attendance_percentage|floatformat:1 }}%</div>
+            <div class="summary-label">Attendance Rate</div>
+        </div>
+    </div>
+    
+    <!-- Reports Table -->
+    <div class="reports-table">
+        <h3 style="padding: 20px; margin: 0; background: #f8f9fa; border-bottom: 1px solid #eee;">
+            Attendance Records (Latest 100)
+        </h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Teacher</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Check In</th>
+                    <th>Check Out</th>
+                    <th>Total Hours</th>
+                    <th>Subjects Assigned</th>
+                    <th>Classes Conducted</th>
+                    <th>Auto Marked</th>
+                    <th>Remarks</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in enhanced_records %}
+                <tr>
+                    <td>
+                        <strong>{{ item.record.teacher.user.get_full_name|default:item.record.teacher.user.username }}</strong><br>
+                        <small style="color: #666;">{{ item.record.teacher.user.email }}</small>
+                    </td>
+                    <td>{{ item.record.date }}</td>
+                    <td>
+                        <span class="status-badge status-{{ item.record.status }}">
+                            {{ item.record.get_status_display }}
+                        </span>
+                    </td>
+                    <td>{{ item.record.check_in_time|default:"--" }}</td>
+                    <td>{{ item.record.check_out_time|default:"--" }}</td>
+                    <td>{{ item.record.total_hours|floatformat:2 }}</td>
+                    <td>
+                        {% if item.subject_assignments %}
+                            {% for assignment in item.subject_assignments %}
+                                <div style="margin-bottom: 3px; font-size: 0.85rem;">
+                                    <strong>{{ assignment.subject.name }}</strong><br>
+                                    <small style="color: #666;">{{ assignment.class_assigned }}</small>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <small style="color: #999;">No subjects assigned</small>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div style="text-align: center;">
+                            <strong>{{ item.classes_conducted }}/{{ item.total_sessions }}</strong><br>
+                            <small style="color: #666;">Completed/Total</small>
+                        </div>
+                        {% if item.attendance_sessions %}
+                            <div style="margin-top: 5px;">
+                                {% for session in item.attendance_sessions %}
+                                    <div style="margin-bottom: 2px; padding: 1px 4px; background: {% if session.is_completed %}#d4edda{% else %}#f8d7da{% endif %}; border-radius: 2px; font-size: 0.75rem;">
+                                        {{ session.teacher_assignment.subject.code }} - {{ session.start_time }}
+                                        {% if session.is_completed %}✓{% else %}✗{% endif %}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if item.record.is_auto_marked %}
+                            <span style="color: #28a745;">✓ Auto</span>
+                        {% else %}
+                            <span style="color: #dc3545;">✗ Manual</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ item.record.remarks|default:"--" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="10" style="text-align: center; color: #666; padding: 40px;">
+                        No attendance records found for the selected criteria.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    {% if enhanced_records %}
+    <div style="margin-top: 20px; text-align: center;">
+        <a href="?{{ request.GET.urlencode }}&export=csv" class="btn btn-success">
+            Export to CSV
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,378 @@
+{% extends 'base.html' %}
+
+{% block title %}Mark Attendance - SMS{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2><i class="fas fa-check-circle"></i> Mark Attendance</h2>
+        <p class="text-muted">Mark attendance for your classes</p>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Class Selection -->
+    <div class="col-lg-4 mb-4">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h6 class="m-0"><i class="fas fa-filter"></i> Select Class & Subject</h6>
+            </div>
+            <div class="card-body">
+                <form id="classSelectionForm">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="assignmentSelect" class="form-label">Subject & Class</label>
+                        <select class="form-select" id="assignmentSelect" name="assignment">
+                            <option value="">Select Subject & Class</option>
+                            {% for assignment in teacher_assignments %}
+                            <option value="{{ assignment.id }}">
+                                {{ assignment.subject.name }} - {{ assignment.class_assigned.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="dateSelect" class="form-label">Date</label>
+                        <input type="date" class="form-control" id="dateSelect" name="date" value="{{ today|date:'Y-m-d' }}">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="startTimeSelect" class="form-label">Start Time</label>
+                        <input type="time" class="form-control" id="startTimeSelect" name="start_time" value="09:00">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="endTimeSelect" class="form-label">End Time</label>
+                        <input type="time" class="form-control" id="endTimeSelect" name="end_time" value="10:30">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="topicInput" class="form-label">Topic Covered</label>
+                        <input type="text" class="form-control" id="topicInput" name="topic" placeholder="Topic covered in this session">
+                    </div>
+                    
+                    <button type="button" class="btn btn-primary" onclick="loadStudents()">
+                        <i class="fas fa-search"></i> Load Students
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Quick Actions -->
+        <div class="card shadow mt-4">
+            <div class="card-header bg-success text-white">
+                <h6 class="m-0"><i class="fas fa-bolt"></i> Quick Actions</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-success btn-sm" onclick="markAllPresent()">
+                        <i class="fas fa-check-double"></i> Mark All Present
+                    </button>
+                    <button type="button" class="btn btn-warning btn-sm" onclick="markAllAbsent()">
+                        <i class="fas fa-times-circle"></i> Mark All Absent
+                    </button>
+                    <button type="button" class="btn btn-info btn-sm" onclick="resetAttendance()">
+                        <i class="fas fa-undo"></i> Reset All
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Student List -->
+    <div class="col-lg-8 mb-4">
+        <div class="card shadow">
+            <div class="card-header bg-info text-white">
+                <h6 class="m-0"><i class="fas fa-users"></i> Student Attendance</h6>
+            </div>
+            <div class="card-body">
+                <div id="studentList">
+                    <div class="text-center text-muted py-5">
+                        <i class="fas fa-users fa-3x mb-3"></i>
+                        <p>Please select a subject & class to load students</p>
+                    </div>
+                </div>
+                
+                <!-- Student attendance form -->
+                <div id="attendanceForm" style="display: none;">
+                    <div id="loadingSpinner" class="text-center py-3" style="display: none;">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Loading students...</p>
+                    </div>
+                    
+                    <div id="attendanceContent" style="display: none;">
+                        <div class="alert alert-info">
+                            <strong>Subject:</strong> <span id="selectedSubject"></span><br>
+                            <strong>Class:</strong> <span id="selectedClass"></span>
+                        </div>
+                        
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 25%;">Student Information</th>
+                                        <th style="width: 12%;">Present</th>
+                                        <th style="width: 12%;">Absent</th>
+                                        <th style="width: 12%;">Late</th>
+                                        <th style="width: 12%;">Excused</th>
+                                        <th style="width: 27%;">Remarks</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="studentTableBody">
+                                    <!-- Students will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center mt-4">
+                            <div>
+                                <span class="badge bg-success me-2">Present: <span id="presentCount">0</span></span>
+                                <span class="badge bg-danger me-2">Absent: <span id="absentCount">0</span></span>
+                                <span class="badge bg-warning me-2">Late: <span id="lateCount">0</span></span>
+                                <span class="badge bg-info">Excused: <span id="excusedCount">0</span></span>
+                            </div>
+                            <button type="button" class="btn btn-primary" onclick="saveAttendance()">
+                                <i class="fas fa-save"></i> Save Attendance
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentStudents = [];
+let currentAssignmentId = null;
+
+function getCsrfToken() {
+    return document.querySelector('[name=csrfmiddlewaretoken]').value;
+}
+
+function loadStudents() {
+    const assignmentId = document.getElementById('assignmentSelect').value;
+    
+    if (!assignmentId) {
+        alert('Please select a subject & class');
+        return;
+    }
+    
+    currentAssignmentId = assignmentId;
+    
+    // Show loading state
+    document.getElementById('studentList').style.display = 'none';
+    document.getElementById('attendanceForm').style.display = 'block';
+    document.getElementById('loadingSpinner').style.display = 'block';
+    document.getElementById('attendanceContent').style.display = 'none';
+    
+    // Fetch students from backend
+    fetch(`{% url 'attendance:get_students_ajax' %}?assignment_id=${assignmentId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert('Error: ' + data.error);
+                return;
+            }
+            
+            currentStudents = data.students;
+            
+            // Update UI with assignment info
+            document.getElementById('selectedSubject').textContent = data.assignment.subject;
+            document.getElementById('selectedClass').textContent = data.assignment.class;
+            
+            // Populate student table
+            populateStudentTable(data.students);
+            
+            // Hide loading and show content
+            document.getElementById('loadingSpinner').style.display = 'none';
+            document.getElementById('attendanceContent').style.display = 'block';
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to load students. Please try again.');
+            document.getElementById('loadingSpinner').style.display = 'none';
+        });
+}
+
+function populateStudentTable(students) {
+    const tbody = document.getElementById('studentTableBody');
+    tbody.innerHTML = '';
+    
+    students.forEach(student => {
+        const row = `
+            <tr>
+                <td>
+                    <div class="d-flex align-items-center">
+                        <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                            <i class="fas fa-user text-white"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold text-dark">${student.name}</div>
+                            <small class="text-muted">ID: ${student.student_id}</small>
+                            ${student.email ? `<br><small class="text-muted"><i class="fas fa-envelope"></i> ${student.email}</small>` : ''}
+                        </div>
+                    </div>
+                </td>
+                <td class="text-center">
+                    <div class="form-check form-check-inline">
+                        <input type="radio" class="form-check-input" name="attendance_${student.id}" value="present" onchange="updateCounts()" checked>
+                        <label class="form-check-label text-success"><i class="fas fa-check"></i></label>
+                    </div>
+                </td>
+                <td class="text-center">
+                    <div class="form-check form-check-inline">
+                        <input type="radio" class="form-check-input" name="attendance_${student.id}" value="absent" onchange="updateCounts()">
+                        <label class="form-check-label text-danger"><i class="fas fa-times"></i></label>
+                    </div>
+                </td>
+                <td class="text-center">
+                    <div class="form-check form-check-inline">
+                        <input type="radio" class="form-check-input" name="attendance_${student.id}" value="late" onchange="updateCounts()">
+                        <label class="form-check-label text-warning"><i class="fas fa-clock"></i></label>
+                    </div>
+                </td>
+                <td class="text-center">
+                    <div class="form-check form-check-inline">
+                        <input type="radio" class="form-check-input" name="attendance_${student.id}" value="excused" onchange="updateCounts()">
+                        <label class="form-check-label text-info"><i class="fas fa-user-check"></i></label>
+                    </div>
+                </td>
+                <td>
+                    <input type="text" class="form-control form-control-sm" name="remarks_${student.id}" placeholder="Optional remarks">
+                </td>
+            </tr>
+        `;
+        tbody.innerHTML += row;
+    });
+    
+    updateCounts();
+}
+
+function markAllPresent() {
+    const presentRadios = document.querySelectorAll('input[value="present"]');
+    presentRadios.forEach(radio => {
+        radio.checked = true;
+    });
+    updateCounts();
+}
+
+function markAllAbsent() {
+    const absentRadios = document.querySelectorAll('input[value="absent"]');
+    absentRadios.forEach(radio => {
+        radio.checked = true;
+    });
+    updateCounts();
+}
+
+function resetAttendance() {
+    const allRadios = document.querySelectorAll('input[type="radio"]');
+    allRadios.forEach(radio => {
+        radio.checked = false;
+    });
+    
+    const allRemarks = document.querySelectorAll('input[type="text"]');
+    allRemarks.forEach(input => {
+        input.value = '';
+    });
+    
+    updateCounts();
+}
+
+function updateCounts() {
+    const presentCount = document.querySelectorAll('input[value="present"]:checked').length;
+    const absentCount = document.querySelectorAll('input[value="absent"]:checked').length;
+    const lateCount = document.querySelectorAll('input[value="late"]:checked').length;
+    const excusedCount = document.querySelectorAll('input[value="excused"]:checked').length;
+    
+    document.getElementById('presentCount').textContent = presentCount;
+    document.getElementById('absentCount').textContent = absentCount;
+    document.getElementById('lateCount').textContent = lateCount;
+    document.getElementById('excusedCount').textContent = excusedCount;
+}
+
+function saveAttendance() {
+    if (!currentAssignmentId) {
+        alert('Please select a subject & class first');
+        return;
+    }
+    
+    // Collect attendance data
+    const attendanceData = [];
+    currentStudents.forEach(student => {
+        const selectedStatus = document.querySelector(`input[name="attendance_${student.id}"]:checked`);
+        const remarks = document.querySelector(`input[name="remarks_${student.id}"]`).value;
+        
+        if (selectedStatus) {
+            attendanceData.push({
+                student_id: student.id,
+                status: selectedStatus.value,
+                remarks: remarks
+            });
+        }
+    });
+    
+    if (attendanceData.length === 0) {
+        alert('Please mark attendance for at least one student');
+        return;
+    }
+    
+    // Prepare data for submission
+    const submitData = {
+        assignment_id: currentAssignmentId,
+        date: document.getElementById('dateSelect').value,
+        start_time: document.getElementById('startTimeSelect').value,
+        end_time: document.getElementById('endTimeSelect').value,
+        topic_covered: document.getElementById('topicInput').value,
+        attendance_data: attendanceData
+    };
+    
+    // Show loading state
+    const saveButton = document.querySelector('button[onclick="saveAttendance()"]');
+    const originalText = saveButton.innerHTML;
+    saveButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+    saveButton.disabled = true;
+    
+    // Send data to backend
+    fetch(`{% url 'attendance:save_attendance_ajax' %}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCsrfToken()
+        },
+        body: JSON.stringify(submitData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            // Reset form
+            document.getElementById('classSelectionForm').reset();
+            document.getElementById('studentList').style.display = 'block';
+            document.getElementById('attendanceForm').style.display = 'none';
+            currentStudents = [];
+            currentAssignmentId = null;
+        } else {
+            alert('Error: ' + (data.error || 'Failed to save attendance'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to save attendance. Please try again.');
+    })
+    .finally(() => {
+        // Restore button state
+        saveButton.innerHTML = originalText;
+        saveButton.disabled = false;
+    });
+}
+
+// Set today's date by default
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('dateSelect').valueAsDate = new Date();
+});
+</script>
+{% endblock %}

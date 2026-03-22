@@ -1,0 +1,273 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ course.name }} - SMS{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-book"></i> {{ course.name }}</h2>
+            <div>
+                <a href="{% url 'academic:course_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Courses
+                </a>
+                {% if can_manage %}
+                <a href="{% url 'academic:edit_course' course.id %}" class="btn btn-warning">
+                    <i class="fas fa-edit"></i> Edit Course
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Course Information -->
+<div class="row mb-4">
+    <div class="col-lg-4">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h6 class="m-0"><i class="fas fa-info-circle"></i> Course Information</h6>
+            </div>
+            <div class="card-body">
+                <p><strong>Course Code:</strong> {{ course.code }}</p>
+                <p><strong>Department:</strong> {{ course.department.name }}</p>
+                <p><strong>Duration:</strong> {{ course.duration_years }} years</p>
+                <p><strong>Description:</strong></p>
+                <p class="text-muted">{{ course.description|default:"No description available" }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-8">
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <div class="card bg-primary text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6>Total Classes</h6>
+                                <h4>{{ classes.count }}</h4>
+                            </div>
+                            <i class="fas fa-chalkboard fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card bg-success text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6>Total Students</h6>
+                                <h4>{{ total_students }}</h4>
+                            </div>
+                            <i class="fas fa-users fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card bg-info text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6>Total Teachers</h6>
+                                <h4>{{ total_teachers }}</h4>
+                            </div>
+                            <i class="fas fa-chalkboard-teacher fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Classes and Students -->
+<div class="row">
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                <h6 class="m-0"><i class="fas fa-chalkboard"></i> Classes</h6>
+                {% if can_manage %}
+                <a href="{% url 'academic:create_class' %}?course={{ course.id }}" class="btn btn-sm btn-light">
+                    <i class="fas fa-plus"></i> Add Class
+                </a>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                {% if classes %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Class</th>
+                                <th>Year</th>
+                                <th>Semester</th>
+                                <th>Students</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for class in classes %}
+                            <tr>
+                                <td>{{ class.section }}</td>
+                                <td>{{ class.year }}</td>
+                                <td>{{ class.semester }}</td>
+                                <td>
+                                    <span class="badge bg-primary">{{ class.student_count }}</span>
+                                </td>
+                                <td>
+                                    <a href="{% url 'academic:class_detail' class.id %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-3">
+                    <i class="fas fa-chalkboard fa-2x text-muted mb-2"></i>
+                    <p class="text-muted">No classes created yet</p>
+                    {% if can_manage %}
+                    <a href="{% url 'academic:create_class' %}?course={{ course.id }}" class="btn btn-sm btn-primary">
+                        <i class="fas fa-plus"></i> Create First Class
+                    </a>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                <h6 class="m-0"><i class="fas fa-chalkboard-teacher"></i> Teachers</h6>
+                {% if can_manage %}
+                <a href="{% url 'academic:assign_teacher' %}?course={{ course.id }}" class="btn btn-sm btn-light">
+                    <i class="fas fa-plus"></i> Assign Teacher
+                </a>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                {% if teacher_assignments %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Teacher</th>
+                                <th>Subject</th>
+                                <th>Class</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for assignment in teacher_assignments %}
+                            <tr>
+                                <td>{{ assignment.teacher.user.get_full_name|default:assignment.teacher.user.username }}</td>
+                                <td>{{ assignment.subject.name }}</td>
+                                <td>{{ assignment.class_assigned.section }}</td>
+                                <td>
+                                    {% if can_manage %}
+                                    <a href="{% url 'academic:edit_teacher_assignment' assignment.id %}" class="btn btn-sm btn-outline-warning">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-3">
+                    <i class="fas fa-chalkboard-teacher fa-2x text-muted mb-2"></i>
+                    <p class="text-muted">No teachers assigned yet</p>
+                    {% if can_manage %}
+                    <a href="{% url 'academic:assign_teacher' %}?course={{ course.id }}" class="btn btn-sm btn-primary">
+                        <i class="fas fa-plus"></i> Assign First Teacher
+                    </a>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Subjects -->
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header bg-warning text-white d-flex justify-content-between align-items-center">
+                <h6 class="m-0"><i class="fas fa-book-open"></i> Course Subjects</h6>
+                {% if can_manage %}
+                <a href="{% url 'academic:create_subject' %}?course={{ course.id }}" class="btn btn-sm btn-light">
+                    <i class="fas fa-plus"></i> Add Subject
+                </a>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                {% if subjects %}
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Subject Code</th>
+                                <th>Subject Name</th>
+                                <th>Year</th>
+                                <th>Semester</th>
+                                <th>Credits</th>
+                                <th>Teachers</th>
+                                {% if can_manage %}
+                                <th>Actions</th>
+                                {% endif %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for subject in subjects %}
+                            <tr>
+                                <td><strong>{{ subject.code }}</strong></td>
+                                <td>{{ subject.name }}</td>
+                                <td>{{ subject.year }}</td>
+                                <td>{{ subject.semester }}</td>
+                                <td>{{ subject.credits }}</td>
+                                <td>
+                                    {% for assignment in subject.teachersubjectassignment_set.all %}
+                                        <span class="badge bg-secondary me-1">{{ assignment.teacher.user.get_full_name|default:assignment.teacher.user.username }}</span>
+                                    {% empty %}
+                                        <span class="text-muted">No teachers assigned</span>
+                                    {% endfor %}
+                                </td>
+                                {% if can_manage %}
+                                <td>
+                                    <a href="{% url 'academic:edit_subject' subject.id %}" class="btn btn-sm btn-outline-warning">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                </td>
+                                {% endif %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-book-open fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No Subjects Found</h5>
+                    <p class="text-muted">No subjects have been added to this course yet.</p>
+                    {% if can_manage %}
+                    <a href="{% url 'academic:create_subject' %}?course={{ course.id }}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Add First Subject
+                    </a>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

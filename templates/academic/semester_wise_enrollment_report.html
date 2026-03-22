@@ -1,0 +1,279 @@
+{% extends 'base.html' %}
+
+{% block title %}Semester-wise Enrollment Report - SMS{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-chart-line"></i> Semester-wise Enrollment Report</h2>
+            <div>
+                <a href="{% url 'academic:manage_student_enrollment' %}" class="btn btn-secondary me-2">
+                    <i class="fas fa-arrow-left"></i> Back to Enrollments
+                </a>
+                <button onclick="window.print()" class="btn btn-primary">
+                    <i class="fas fa-print"></i> Print Report
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Summary Statistics -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ total_semesters }}</h4>
+                        <p class="mb-0">Active Semesters</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-calendar fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ total_enrollments }}</h4>
+                        <p class="mb-0">Total Enrollments</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-users fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ departments.count }}</h4>
+                        <p class="mb-0">Departments</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-building fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ courses.count }}</h4>
+                        <p class="mb-0">Courses</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-graduation-cap fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="m-0"><i class="fas fa-filter"></i> Report Filters</h6>
+            </div>
+            <div class="card-body">
+                <form method="get" class="row g-3">
+                    <div class="col-md-3">
+                        <label for="department" class="form-label">Department</label>
+                        <select name="department" id="department" class="form-select">
+                            <option value="">All Departments</option>
+                            {% for dept in departments %}
+                                <option value="{{ dept.id }}" {% if department_filter == dept.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ dept.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="course" class="form-label">Course</label>
+                        <select name="course" id="course" class="form-select">
+                            <option value="">All Courses</option>
+                            {% for course in courses %}
+                                <option value="{{ course.id }}" {% if course_filter == course.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ course.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="academic_year" class="form-label">Academic Year</label>
+                        <select name="academic_year" id="academic_year" class="form-select">
+                            <option value="">All Academic Years</option>
+                            {% for year in academic_years %}
+                                <option value="{{ year.id }}" {% if academic_year_filter == year.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ year.year }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">&nbsp;</label>
+                        <button type="submit" class="btn btn-primary d-block w-100">
+                            <i class="fas fa-search"></i> Generate Report
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Semester-wise Report -->
+<div class="row">
+    <div class="col-12">
+        {% if semester_data %}
+            {% for semester_key, semester_info in semester_data.items %}
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="m-0">
+                            <i class="fas fa-calendar-alt"></i> {{ semester_key }}
+                        </h5>
+                        <div>
+                            <span class="badge bg-light text-dark me-2">
+                                {{ semester_info.total_students }} Students
+                            </span>
+                            <span class="badge bg-light text-dark">
+                                {{ semester_info.courses|length }} Courses
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Departments in this semester -->
+                    <div class="mb-3">
+                        <strong>Departments:</strong>
+                        {% for dept in semester_info.departments %}
+                            <span class="badge bg-info me-1">{{ dept }}</span>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Courses and Students -->
+                    <div class="row">
+                        {% for course_name, course_info in semester_info.courses.items %}
+                        <div class="col-md-6 mb-4">
+                            <div class="border rounded p-3">
+                                <h6 class="text-primary">
+                                    <i class="fas fa-book"></i> {{ course_name }}
+                                </h6>
+                                <p class="text-muted mb-2">
+                                    <small>{{ course_info.department }}</small>
+                                </p>
+                                <div class="mb-3">
+                                    <span class="badge bg-success">{{ course_info.count }} Students Enrolled</span>
+                                </div>
+                                
+                                <!-- Student List -->
+                                <div class="student-list">
+                                    <h6 class="text-secondary">Enrolled Students:</h6>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm">
+                                            <thead>
+                                                <tr>
+                                                    <th>Student Name</th>
+                                                    <th>Student ID</th>
+                                                    <th>Section</th>
+                                                    <th>Enrollment Date</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for enrollment in course_info.students %}
+                                                <tr>
+                                                    <td>
+                                                        <small>{{ enrollment.student.user.get_full_name|default:enrollment.student.user.username }}</small>
+                                                    </td>
+                                                    <td>
+                                                        <small>{{ enrollment.student.student_id }}</small>
+                                                    </td>
+                                                    <td>
+                                                        <small>{{ enrollment.class_enrolled.section }}</small>
+                                                    </td>
+                                                    <td>
+                                                        <small>{{ enrollment.enrollment_date|date:"M d, Y" }}</small>
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-chart-line fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No Enrollment Data Found</h5>
+                    <p class="text-muted">No semester-wise enrollment data matches your current filters.</p>
+                    <a href="{% url 'academic:create_student_enrollment' %}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Create First Enrollment
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+@media print {
+    .btn, .card-header .badge, .no-print {
+        display: none !important;
+    }
+    
+    .card {
+        border: 1px solid #000 !important;
+        page-break-inside: avoid;
+    }
+    
+    .card-header {
+        background-color: #f8f9fa !important;
+        color: #000 !important;
+    }
+    
+    .table {
+        font-size: 12px;
+    }
+}
+</style>
+
+<script>
+// Department-Course filtering
+document.getElementById('department').addEventListener('change', function() {
+    const departmentId = this.value;
+    const courseSelect = document.getElementById('course');
+    
+    // Clear course options
+    courseSelect.innerHTML = '<option value="">All Courses</option>';
+    
+    if (departmentId) {
+        // Filter courses by department (you would implement this via AJAX)
+        // For now, we'll submit the form to reload with filtered courses
+        this.form.submit();
+    }
+});
+</script>
+{% endblock %}

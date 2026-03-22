@@ -1,0 +1,288 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Real Teacher Attendance Tracking{% endblock %}
+
+{% block extra_css %}
+<style>
+.attendance-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    border-left: 4px solid #007bff;
+}
+
+.stat-card.present { border-left-color: #28a745; }
+.stat-card.absent { border-left-color: #dc3545; }
+.stat-card.late { border-left-color: #ffc107; }
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin: 10px 0;
+}
+
+.stat-label {
+    color: #666;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+}
+
+.teacher-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 20px;
+}
+
+.teacher-card {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    border-left: 4px solid #6c757d;
+}
+
+.teacher-card.present { border-left-color: #28a745; }
+.teacher-card.absent { border-left-color: #dc3545; }
+.teacher-card.late { border-left-color: #ffc107; }
+
+.teacher-name {
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    color: white;
+    margin-bottom: 15px;
+}
+
+.status-present { background: #28a745; }
+.status-absent { background: #dc3545; }
+.status-late { background: #ffc107; color: #000; }
+
+.duties-section {
+    margin: 15px 0;
+}
+
+.duty-item {
+    background: #f8f9fa;
+    padding: 8px 12px;
+    margin: 5px 0;
+    border-radius: 4px;
+    border-left: 3px solid #28a745;
+    font-size: 0.9rem;
+}
+
+.no-duties {
+    background: #fff3cd;
+    padding: 8px 12px;
+    margin: 5px 0;
+    border-radius: 4px;
+    border-left: 3px solid #ffc107;
+    font-size: 0.9rem;
+    color: #856404;
+}
+
+.subjects-not-attended {
+    background: #f8d7da;
+    padding: 8px 12px;
+    margin: 5px 0;
+    border-radius: 4px;
+    border-left: 3px solid #dc3545;
+    font-size: 0.9rem;
+    color: #721c24;
+}
+
+.filter-section {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 30px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.activity-indicator {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: 8px;
+}
+
+.activity-yes { background: #28a745; }
+.activity-no { background: #dc3545; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="attendance-container">
+    <h1 class="text-center mb-4">Real Teacher Attendance Tracking</h1>
+    <p class="text-center text-muted mb-4">Attendance based on actual duties performed, not just check-in times</p>
+    
+    <!-- Filter Section -->
+    <div class="filter-section">
+        <form method="get" class="row align-items-end">
+            <div class="col-md-3">
+                <label for="date" class="form-label">Date:</label>
+                <input type="date" name="date" id="date" value="{{ selected_date }}" class="form-control">
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-primary">Filter</button>
+                <a href="{% url 'attendance:real_teacher_attendance' %}" class="btn btn-secondary">Today</a>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Statistics -->
+    <div class="stats-row">
+        <div class="stat-card present">
+            <div class="stat-number">{{ present_count }}</div>
+            <div class="stat-label">Actually Present</div>
+            <small>Performed real duties</small>
+        </div>
+        <div class="stat-card absent">
+            <div class="stat-number">{{ absent_count }}</div>
+            <div class="stat-label">Actually Absent</div>
+            <small>No duties performed</small>
+        </div>
+        <div class="stat-card late">
+            <div class="stat-number">{{ late_count }}</div>
+            <div class="stat-label">Late but Active</div>
+            <small>Late but working</small>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ attendance_percentage }}%</div>
+            <div class="stat-label">Real Attendance</div>
+            <small>Based on activities</small>
+        </div>
+    </div>
+    
+    <!-- Teachers Grid -->
+    <div class="teacher-grid">
+        {% for item in enhanced_attendance %}
+        <div class="teacher-card {{ item.attendance.status }}">
+            <div class="teacher-name">
+                {{ item.attendance.teacher.user.get_full_name|default:item.attendance.teacher.user.username }}
+            </div>
+            
+            <span class="status-badge status-{{ item.attendance.status }}">
+                {{ item.attendance.get_status_display }}
+            </span>
+            
+            <div class="d-flex align-items-center mb-2">
+                <span class="activity-indicator {% if item.has_real_activities %}activity-yes{% else %}activity-no{% endif %}"></span>
+                <strong>
+                    {% if item.has_real_activities %}
+                        ACTIVE - Real work performed
+                    {% else %}
+                        INACTIVE - No duties performed
+                    {% endif %}
+                </strong>
+            </div>
+            
+            <div class="row text-center mb-3">
+                <div class="col-4">
+                    <small class="text-muted">Check In</small><br>
+                    <strong>{{ item.attendance.check_in_time|default:"--" }}</strong>
+                </div>
+                <div class="col-4">
+                    <small class="text-muted">Check Out</small><br>
+                    <strong>{{ item.attendance.check_out_time|default:"--" }}</strong>
+                </div>
+                <div class="col-4">
+                    <small class="text-muted">Hours</small><br>
+                    <strong>{{ item.attendance.total_hours|floatformat:1 }}</strong>
+                </div>
+            </div>
+            
+            <!-- Assigned Subjects -->
+            {% if item.subject_assignments %}
+            <div class="mb-3">
+                <strong>Assigned Subjects:</strong>
+                {% for assignment in item.subject_assignments %}
+                    <div class="small text-muted">
+                        • {{ assignment.subject.name }} ({{ assignment.class_assigned }})
+                    </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            <!-- Duties Performed -->
+            <div class="duties-section">
+                <strong>Duties Performed:</strong>
+                {% if item.duties_performed %}
+                    {% for duty in item.duties_performed %}
+                        <div class="duty-item">
+                            <strong>{{ duty.type|title }}:</strong> {{ duty.description }}
+                            {% if duty.time %}<br><small>{{ duty.time }}</small>{% endif %}
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="no-duties">
+                        No duties performed today
+                    </div>
+                {% endif %}
+            </div>
+            
+            <!-- Subjects Not Attended -->
+            {% if item.subjects_not_attended %}
+            <div class="duties-section">
+                <strong>Subjects Not Attended:</strong>
+                {% for subject in item.subjects_not_attended %}
+                    <div class="subjects-not-attended">
+                        <strong>{{ subject.subject }}</strong> - {{ subject.class }}<br>
+                        <small>No attendance marked</small>
+                    </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            <div class="text-center mt-3">
+                <small class="text-muted">
+                    Classes Conducted: <strong>{{ item.classes_attended }}/{{ item.subjects_taught_today }}</strong>
+                </small>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Legend -->
+    <div class="mt-5 p-4 bg-light rounded">
+        <h5>How Real Attendance Tracking Works:</h5>
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>Present:</strong> Teacher performed actual duties like marking student attendance, creating assignments, or grading exams.</p>
+                <p><strong>Absent:</strong> No real activities performed, regardless of check-in time.</p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>Late:</strong> Checked in late but still performed their duties.</p>
+                <p><strong>Activity Indicator:</strong> 
+                    <span class="activity-indicator activity-yes"></span> Active (real work done)
+                    <span class="activity-indicator activity-no"></span> Inactive (no duties)
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

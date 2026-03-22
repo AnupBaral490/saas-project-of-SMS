@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Assignment - SMS{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-edit"></i> Edit Assignment</h2>
+            <a href="{% url 'academic:assignment_detail' assignment.id %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Assignment
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow">
+            <div class="card-header bg-warning text-white">
+                <h6 class="m-0"><i class="fas fa-tasks"></i> Edit: {{ assignment.title }}</h6>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="mb-3">
+                                <label for="{{ form.title.id_for_label }}" class="form-label">Assignment Title</label>
+                                {{ form.title }}
+                                {% if form.title.errors %}
+                                    <div class="text-danger">{{ form.title.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="{{ form.assignment_type.id_for_label }}" class="form-label">Assignment Type</label>
+                                {{ form.assignment_type }}
+                                {% if form.assignment_type.errors %}
+                                    <div class="text-danger">{{ form.assignment_type.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.subject.id_for_label }}" class="form-label">Subject</label>
+                                {{ form.subject }}
+                                {% if form.subject.errors %}
+                                    <div class="text-danger">{{ form.subject.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.class_assigned.id_for_label }}" class="form-label">Class</label>
+                                {{ form.class_assigned }}
+                                {% if form.class_assigned.errors %}
+                                    <div class="text-danger">{{ form.class_assigned.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
+                        {{ form.description }}
+                        {% if form.description.errors %}
+                            <div class="text-danger">{{ form.description.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="{{ form.due_date.id_for_label }}" class="form-label">Due Date</label>
+                                {{ form.due_date }}
+                                {% if form.due_date.errors %}
+                                    <div class="text-danger">{{ form.due_date.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="{{ form.max_marks.id_for_label }}" class="form-label">Maximum Marks</label>
+                                {{ form.max_marks }}
+                                {% if form.max_marks.errors %}
+                                    <div class="text-danger">{{ form.max_marks.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">Status</label>
+                                <div class="form-check">
+                                    {{ form.is_active }}
+                                    <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                        Active Assignment
+                                    </label>
+                                </div>
+                                {% if form.is_active.errors %}
+                                    <div class="text-danger">{{ form.is_active.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.instructions.id_for_label }}" class="form-label">Instructions</label>
+                        {{ form.instructions }}
+                        {% if form.instructions.errors %}
+                            <div class="text-danger">{{ form.instructions.errors }}</div>
+                        {% endif %}
+                        <small class="form-text text-muted">Provide detailed instructions for students</small>
+                    </div>
+                    
+                    {% if form.attachment %}
+                    <div class="mb-3">
+                        <label for="{{ form.attachment.id_for_label }}" class="form-label">Attachment</label>
+                        {% if assignment.attachment %}
+                            <div class="mb-2">
+                                <small class="text-muted">Current file: 
+                                    <a href="{{ assignment.attachment.url }}" target="_blank">{{ assignment.attachment.name }}</a>
+                                </small>
+                            </div>
+                        {% endif %}
+                        {{ form.attachment }}
+                        {% if form.attachment.errors %}
+                            <div class="text-danger">{{ form.attachment.errors }}</div>
+                        {% endif %}
+                        <small class="form-text text-muted">Upload a new file to replace the current one (optional)</small>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{% url 'academic:assignment_detail' assignment.id %}" class="btn btn-secondary me-md-2">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-warning">
+                            <i class="fas fa-save"></i> Update Assignment
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

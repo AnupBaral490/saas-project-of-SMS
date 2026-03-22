@@ -1,0 +1,130 @@
+<!-- ENHANCED CHART SECTION FOR TEACHER DASHBOARD -->
+<!-- Replace the existing chart section (lines 125-195) with this code -->
+
+<!-- Enhanced Statistics Charts - Professional Design -->
+<div class="row mb-4">
+    <!-- Assignment Submissions Chart -->
+    <div class="col-lg-4 col-md-6 mb-4">
+        <div class="card chart-card shadow-lg border-0 h-100">
+            <div class="card-header chart-header-gradient-primary">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center">
+                        <div class="chart-header-icon me-3">
+                            <i class="fas fa-chart-bar"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-0 text-white fw-bold">Assignment Submissions</h6>
+                            <small class="text-white-50">Submission tracking</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body p-4">
+                <div class="chart-container-responsive">
+                    <canvas id="assignmentChart"></canvas>
+                </div>
+                <div class="chart-legend-section mt-4">
+                    {% for stat in assignment_stats %}
+                    <div class="chart-stat-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center">
+                                <div class="stat-indicator stat-indicator-primary me-2"></div>
+                                <span class="stat-label">{{ stat.class_name }}</span>
+                            </div>
+                            <span class="stat-badge badge-gradient-primary">{{ stat.submission_rate }}%</span>
+                        </div>
+                        <div class="progress progress-modern mt-2">
+                            <div class="progress-bar progress-bar-gradient-primary" style="width: {{ stat.submission_rate }}%"></div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Student Passing Rate Chart -->
+    <div class="col-lg-4 col-md-6 mb-4">
+        <div class="card chart-card shadow-lg border-0 h-100">
+            <div class="card-header chart-header-gradient-success">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center">
+                        <div class="chart-header-icon me-3">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-0 text-white fw-bold">Student Passing Rate</h6>
+                            <small class="text-white-50">Performance metrics</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body p-4">
+                <div class="chart-container-responsive">
+                    <canvas id="passingChart"></canvas>
+                </div>
+                <div class="chart-legend-section mt-4">
+                    {% for stat in passing_stats %}
+                    <div class="chart-stat-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center">
+                                <div class="stat-indicator {% if stat.passing_rate >= 80 %}stat-indicator-success{% elif stat.passing_rate >= 60 %}stat-indicator-warning{% else %}stat-indicator-danger{% endif %} me-2"></div>
+                                <span class="stat-label">{{ stat.class_name }}</span>
+                            </div>
+                            <span class="stat-badge {% if stat.passing_rate >= 80 %}badge-gradient-success{% elif stat.passing_rate >= 60 %}badge-gradient-warning{% else %}badge-gradient-danger{% endif %}">
+                                {{ stat.passing_rate }}%
+                            </span>
+                        </div>
+                        <div class="progress progress-modern mt-2">
+                            <div class="progress-bar {% if stat.passing_rate >= 80 %}progress-bar-gradient-success{% elif stat.passing_rate >= 60 %}progress-bar-gradient-warning{% else %}progress-bar-gradient-danger{% endif %}" style="width: {{ stat.passing_rate }}%"></div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Syllabus Progress Chart -->
+    <div class="col-lg-4 col-md-12 mb-4">
+        <div class="card chart-card shadow-lg border-0 h-100">
+            <div class="card-header chart-header-gradient-info">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center">
+                        <div class="chart-header-icon me-3">
+                            <i class="fas fa-chart-pie"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-0 text-white fw-bold">Syllabus Progress</h6>
+                            <small class="text-white-50">Course completion</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body p-4">
+                <div class="chart-container-responsive">
+                    <canvas id="syllabusChart"></canvas>
+                </div>
+                <div class="chart-legend-section mt-4">
+                    {% for progress in syllabus_progress %}
+                    <div class="chart-stat-item">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div class="d-flex align-items-center">
+                                <div class="stat-indicator stat-indicator-info me-2"></div>
+                                <div>
+                                    <span class="stat-label d-block">{{ progress.subject_name|truncatechars:20 }}</span>
+                                    <small class="text-muted">{{ progress.class_name }}</small>
+                                </div>
+                            </div>
+                            <span class="stat-badge badge-gradient-info">{{ progress.progress_percentage }}%</span>
+                        </div>
+                        <div class="progress progress-modern">
+                            <div class="progress-bar progress-bar-gradient-info progress-bar-animated" style="width: {{ progress.progress_percentage }}%"></div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

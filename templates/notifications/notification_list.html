@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+
+{% block title %}Notifications - SMS{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-bell"></i> Notifications</h2>
+            {% if user.user_type == 'admin' or user.user_type == 'teacher' %}
+            <a href="{% url 'notifications:create_notification' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Create Notification
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% if notifications %}
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h6 class="m-0"><i class="fas fa-inbox"></i> Your Notifications</h6>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for notification in notifications %}
+                    <div class="list-group-item {% if notification.priority == 'urgent' %}border-start border-danger border-4{% elif notification.priority == 'high' %}border-start border-warning border-4{% endif %}">
+                        <div class="d-flex w-100 justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <div class="d-flex align-items-center mb-2">
+                                    <h6 class="mb-0 me-2">{{ notification.title }}</h6>
+                                    
+                                    <!-- Priority Badge -->
+                                    {% if notification.priority == 'urgent' %}
+                                        <span class="badge bg-danger">
+                                            <i class="fas fa-exclamation-triangle"></i> Urgent
+                                        </span>
+                                    {% elif notification.priority == 'high' %}
+                                        <span class="badge bg-warning">
+                                            <i class="fas fa-exclamation"></i> High
+                                        </span>
+                                    {% elif notification.priority == 'medium' %}
+                                        <span class="badge bg-info">
+                                            <i class="fas fa-info-circle"></i> Medium
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">
+                                            <i class="fas fa-circle"></i> Low
+                                        </span>
+                                    {% endif %}
+                                    
+                                    <!-- Type Badge -->
+                                    {% if notification.notification_type == 'academic' %}
+                                        <span class="badge bg-primary ms-1">
+                                            <i class="fas fa-graduation-cap"></i> Academic
+                                        </span>
+                                    {% elif notification.notification_type == 'attendance' %}
+                                        <span class="badge bg-success ms-1">
+                                            <i class="fas fa-calendar-check"></i> Attendance
+                                        </span>
+                                    {% elif notification.notification_type == 'exam' %}
+                                        <span class="badge bg-warning ms-1">
+                                            <i class="fas fa-clipboard-list"></i> Exam
+                                        </span>
+                                    {% elif notification.notification_type == 'fee' %}
+                                        <span class="badge bg-info ms-1">
+                                            <i class="fas fa-dollar-sign"></i> Fee
+                                        </span>
+                                    {% elif notification.notification_type == 'event' %}
+                                        <span class="badge bg-purple ms-1">
+                                            <i class="fas fa-calendar-alt"></i> Event
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-secondary ms-1">
+                                            <i class="fas fa-bell"></i> General
+                                        </span>
+                                    {% endif %}
+                                </div>
+                                
+                                <p class="mb-2 text-muted">{{ notification.message|truncatewords:30 }}</p>
+                                
+                                <div class="d-flex align-items-center text-muted small">
+                                    <i class="fas fa-user me-1"></i>
+                                    <span class="me-3">From: {{ notification.sender.get_full_name|default:notification.sender.username }}</span>
+                                    <i class="fas fa-clock me-1"></i>
+                                    <span>{{ notification.created_at|timesince }} ago</span>
+                                </div>
+                            </div>
+                            
+                            <div class="ms-3">
+                                <button class="btn btn-sm btn-outline-primary" type="button" 
+                                        data-bs-toggle="collapse" data-bs-target="#notification-{{ notification.id }}" 
+                                        aria-expanded="false">
+                                    <i class="fas fa-eye"></i> View
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Expandable Content -->
+                        <div class="collapse mt-3" id="notification-{{ notification.id }}">
+                            <div class="card card-body bg-light">
+                                <h6>Full Message:</h6>
+                                <p class="mb-3">{{ notification.message|linebreaks }}</p>
+                                
+                                <div class="row text-muted small">
+                                    <div class="col-md-6">
+                                        <strong>Sent to:</strong> {{ notification.recipients.count }} recipient{{ notification.recipients.count|pluralize }}
+                                    </div>
+                                    <div class="col-md-6">
+                                        <strong>Created:</strong> {{ notification.created_at|date:"F d, Y g:i A" }}
+                                    </div>
+                                </div>
+                                
+                                {% if notification.send_email %}
+                                <div class="mt-2">
+                                    <small class="text-info">
+                                        <i class="fas fa-envelope"></i> Email notification was also sent
+                                    </small>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-bell-slash fa-4x text-muted mb-3"></i>
+                <h4 class="text-muted">No Notifications</h4>
+                <p class="text-muted">You don't have any notifications at the moment.</p>
+                {% if user.user_type == 'admin' or user.user_type == 'teacher' %}
+                <a href="{% url 'notifications:create_notification' %}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Create Your First Notification
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<style>
+.bg-purple {
+    background-color: #6f42c1 !important;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,326 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block title %}{{ title }} | {{ site_title|default:"Django site admin" }}{% endblock %}
+
+{% block extrahead %}
+<style>
+.teacher-attendance-dashboard {
+    padding: 20px;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border-left: 4px solid #007cba;
+}
+
+.stat-card.success { border-left-color: #28a745; }
+.stat-card.danger { border-left-color: #dc3545; }
+.stat-card.warning { border-left-color: #ffc107; }
+.stat-card.info { border-left-color: #17a2b8; }
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin: 10px 0;
+}
+
+.stat-label {
+    color: #666;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.attendance-table {
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.attendance-table table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.attendance-table th,
+.attendance-table td {
+    padding: 8px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+    vertical-align: top;
+}
+
+.attendance-table th {
+    background: #f8f9fa;
+    font-weight: 600;
+}
+
+.status-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    color: white;
+}
+
+.status-present { background: #28a745; }
+.status-absent { background: #dc3545; }
+.status-late { background: #ffc107; color: #000; }
+.status-on-leave { background: #17a2b8; }
+.status-half-day { background: #fd7e14; }
+
+.filter-form {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.recent-activity {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.activity-item {
+    padding: 10px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.activity-item:last-child {
+    border-bottom: none;
+}
+
+.duties-performed {
+    background: #d4edda;
+    border: 1px solid #c3e6cb;
+    border-radius: 4px;
+    padding: 8px;
+    margin: 5px 0;
+    font-size: 0.8rem;
+}
+
+.subjects-not-attended {
+    background: #f8d7da;
+    border: 1px solid #f5c6cb;
+    border-radius: 4px;
+    padding: 8px;
+    margin: 5px 0;
+    font-size: 0.8rem;
+}
+
+.activity-indicator {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: 5px;
+}
+
+.activity-yes { background: #28a745; }
+.activity-no { background: #dc3545; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="teacher-attendance-dashboard">
+    <h1>{{ title }} - Real Activity Tracking</h1>
+    
+    <!-- Filter Form -->
+    <div class="filter-form">
+        <form method="get" style="display: flex; gap: 15px; align-items: end;">
+            <div>
+                <label for="date">Date:</label>
+                <input type="date" name="date" id="date" value="{{ selected_date }}" class="form-control" style="width: 150px;">
+            </div>
+            <button type="submit" class="btn btn-primary">Filter</button>
+            <a href="{% url 'admin:attendance_teacherattendance_reports' %}" class="btn btn-info">Detailed Reports</a>
+        </form>
+    </div>
+    
+    <!-- Statistics Grid -->
+    <div class="stats-grid">
+        <div class="stat-card success">
+            <div class="stat-label">Actually Present</div>
+            <div class="stat-number">{{ present_count }}</div>
+            <div>{{ attendance_percentage }}% Real Attendance</div>
+            <small>Based on actual duties performed</small>
+        </div>
+        
+        <div class="stat-card danger">
+            <div class="stat-label">Actually Absent</div>
+            <div class="stat-number">{{ absent_count }}</div>
+            <div>No duties performed</div>
+            <small>Even if checked in</small>
+        </div>
+        
+        <div class="stat-card warning">
+            <div class="stat-label">Late but Active</div>
+            <div class="stat-number">{{ late_count }}</div>
+            <div>Late arrival but working</div>
+        </div>
+        
+        <div class="stat-card info">
+            <div class="stat-label">Currently Online</div>
+            <div class="stat-number">{{ online_teachers }}</div>
+            <div>Active in 30 min</div>
+        </div>
+    </div>
+    
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
+        <!-- Today's Real Attendance Detail -->
+        <div class="attendance-table">
+            <h3 style="padding: 20px; margin: 0; background: #f8f9fa; border-bottom: 1px solid #eee;">
+                Real Activity-Based Attendance - {{ filter_date }}
+            </h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Teacher</th>
+                        <th>Real Status</th>
+                        <th>Check Times</th>
+                        <th>Duties Performed</th>
+                        <th>Subjects Not Attended</th>
+                        <th>Activity Indicator</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in enhanced_attendance %}
+                    <tr {% if not item.has_real_activities %}style="background: #fff3cd;"{% endif %}>
+                        <td>
+                            <strong>{{ item.attendance.teacher.user.get_full_name|default:item.attendance.teacher.user.username }}</strong><br>
+                            <small style="color: #666;">{{ item.attendance.teacher.user.email }}</small>
+                            {% if item.subject_assignments %}
+                                <div style="margin-top: 5px;">
+                                    <small style="color: #666;">Assigned Subjects:</small>
+                                    {% for assignment in item.subject_assignments %}
+                                        <div style="font-size: 0.8rem; color: #666;">
+                                            • {{ assignment.subject.name }} ({{ assignment.class_assigned }})
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="status-badge status-{{ item.attendance.status }}">
+                                {{ item.attendance.get_status_display }}
+                            </span>
+                            {% if not item.has_real_activities and item.attendance.check_in_time %}
+                                <br><small style="color: #dc3545;">Checked in but no duties</small>
+                            {% elif item.has_real_activities %}
+                                <br><small style="color: #28a745;">Real work performed</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div><strong>In:</strong> {{ item.attendance.check_in_time|default:"--" }}</div>
+                            <div><strong>Out:</strong> {{ item.attendance.check_out_time|default:"--" }}</div>
+                            <div><strong>Hours:</strong> {{ item.attendance.total_hours|floatformat:2 }}</div>
+                        </td>
+                        <td>
+                            {% if item.duties_performed %}
+                                {% for duty in item.duties_performed %}
+                                    <div class="duties-performed">
+                                        <strong>{{ duty.type|title }}:</strong> {{ duty.description }}
+                                        {% if duty.time %}<br><small>{{ duty.time }}</small>{% endif %}
+                                    </div>
+                                {% endfor %}
+                            {% else %}
+                                <div style="color: #dc3545; font-style: italic;">No duties performed</div>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if item.subjects_not_attended %}
+                                {% for subject in item.subjects_not_attended %}
+                                    <div class="subjects-not-attended">
+                                        <strong>{{ subject.subject }}</strong><br>
+                                        <small>{{ subject.class }} - No attendance marked</small>
+                                    </div>
+                                {% endfor %}
+                            {% else %}
+                                {% if item.subject_assignments %}
+                                    <div style="color: #28a745; font-style: italic;">All subjects attended</div>
+                                {% else %}
+                                    <div style="color: #666; font-style: italic;">No subjects assigned</div>
+                                {% endif %}
+                            {% endif %}
+                        </td>
+                        <td style="text-align: center;">
+                            <div class="activity-indicator {% if item.has_real_activities %}activity-yes{% else %}activity-no{% endif %}"></div>
+                            {% if item.has_real_activities %}
+                                <div style="color: #28a745; font-weight: bold;">ACTIVE</div>
+                                <small>{{ item.classes_attended }} classes conducted</small>
+                            {% else %}
+                                <div style="color: #dc3545; font-weight: bold;">INACTIVE</div>
+                                <small>No real activities</small>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Recent Activity -->
+        <div class="recent-activity">
+            <h3 style="margin-top: 0;">Recent Activity</h3>
+            {% for activity in recent_activities %}
+            <div class="activity-item">
+                <div style="font-weight: bold;">{{ activity.teacher.user.get_full_name|default:activity.teacher.user.username }}</div>
+                <div style="color: #666; font-size: 0.9rem;">{{ activity.get_activity_type_display }}</div>
+                <div style="color: #999; font-size: 0.8rem;">{{ activity.timestamp|timesince }} ago</div>
+                {% if activity.description %}
+                    <div style="color: #666; font-size: 0.8rem; font-style: italic;">{{ activity.description }}</div>
+                {% endif %}
+            </div>
+            {% empty %}
+            <p style="color: #666; text-align: center;">No recent activity</p>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <!-- Legend -->
+    <div style="background: white; padding: 15px; border-radius: 8px; margin-top: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <h4>Real Attendance Tracking Legend:</h4>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">
+            <div>
+                <strong>Present:</strong> Teacher performed actual duties (marked attendance, created assignments, etc.)
+            </div>
+            <div>
+                <strong>Absent:</strong> No real activities performed, regardless of check-in time
+            </div>
+            <div>
+                <strong>Late:</strong> Checked in late but performed duties
+            </div>
+            <div>
+                <strong>Activity Indicator:</strong> 
+                <span class="activity-indicator activity-yes"></span> Active (real work done)
+                <span class="activity-indicator activity-no"></span> Inactive (no duties)
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Auto-refresh page every 5 minutes
+setTimeout(function() {
+    location.reload();
+}, 300000);
+</script>
+{% endblock %}

@@ -1,0 +1,230 @@
+{% extends 'base.html' %}
+
+{% block title %}Subjects - SMS{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-book"></i> Subjects</h2>
+            {% if can_manage %}
+            <a href="{% url 'academic:create_subject' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Add New Subject
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Subjects List -->
+<div class="row">
+    <div class="col-12">
+        {% if subjects %}
+            {% regroup subjects by semester as semester_groups %}
+            {% for semester_group in semester_groups %}
+            <div class="mb-4">
+                <div class="card-header bg-primary text-white semester-section-header">
+                    <h4 class="mb-0">
+                        <i class="fas fa-calendar-alt"></i> 
+                        Semester {{ semester_group.grouper }}
+                        <span class="badge bg-light text-dark ms-2">{{ semester_group.list|length }} subjects</span>
+                    </h4>
+                </div>
+                <div class="card semester-subjects-card">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Subject Name</th>
+                                        <th>Subject Code</th>
+                                        <th>Course</th>
+                                        <th>Department</th>
+                                        <th>Year</th>
+                                        <th>Credits</th>
+                                        {% if user.user_type == 'admin' %}
+                                        <th>Actions</th>
+                                        {% endif %}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for subject in semester_group.list %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ subject.name }}</strong>
+                                            {% if subject.description %}
+                                            <br><small class="text-muted">{{ subject.description|truncatewords:10 }}</small>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-primary">{{ subject.code }}</span>
+                                        </td>
+                                        <td>{{ subject.course.name }}</td>
+                                        <td>{{ subject.course.department.name }}</td>
+                                        <td>
+                                            <span class="badge bg-info">Year {{ subject.year }}</span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-success">{{ subject.credits }} Credits</span>
+                                        </td>
+                                        {% if user.user_type == 'admin' %}
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <a href="{% url 'academic:edit_subject' subject.id %}" 
+                                                   class="btn btn-sm btn-outline-warning" title="Edit">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                {% comment %}
+                                                <!-- Delete functionality not implemented yet -->
+                                                <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                        title="Delete" onclick="confirmDelete('{{ subject.name }}', '{{ subject.id }}')">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                                {% endcomment %}
+                                            </div>
+                                        </td>
+                                        {% endif %}
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+        <div class="card shadow">
+            <div class="card-body">
+                <div class="text-center text-muted py-4">
+                    <i class="fas fa-book fa-3x mb-3"></i>
+                    <br>
+                    {% if user.user_type == 'student' %}
+                        No subjects found for your current enrollment.
+                    {% elif user.user_type == 'teacher' %}
+                        No subjects assigned to you yet.
+                    {% else %}
+                        No subjects found.
+                    {% endif %}
+                    {% if can_manage %}
+                    <br><a href="{% url 'academic:create_subject' %}" class="btn btn-primary mt-3">
+                        <i class="fas fa-plus"></i> Create First Subject
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Statistics -->
+{% if subjects %}
+<div class="row mt-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body text-center">
+                <h4>{{ subjects|length }}</h4>
+                <p class="mb-0">Total Subjects</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body text-center">
+                <h4>
+                    {% regroup subjects by semester as semester_groups %}
+                    {{ semester_groups|length }}
+                </h4>
+                <p class="mb-0">Semesters</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body text-center">
+                <h4>
+                    {% regroup subjects by course as course_groups %}
+                    {{ course_groups|length }}
+                </h4>
+                <p class="mb-0">Courses</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body text-center">
+                <h4>{{ total_credits }}</h4>
+                <p class="mb-0">Total Credits</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Semester Summary -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-chart-bar"></i> Semester Summary</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% regroup subjects by semester as semester_groups %}
+                    {% for semester_group in semester_groups %}
+                    <div class="col-md-4 col-lg-3 mb-3">
+                        <div class="semester-summary-card">
+                            <div class="semester-number">
+                                <h3>{{ semester_group.grouper }}</h3>
+                                <small>Semester</small>
+                            </div>
+                            <div class="semester-stats">
+                                <div class="stat-item">
+                                    <span class="stat-number">{{ semester_group.list|length }}</span>
+                                    <span class="stat-label">Subjects</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% comment %}
+<!-- Delete Confirmation Modal - Not implemented yet -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the subject "<span id="subjectName"></span>"?</p>
+                <p class="text-danger"><small>This action cannot be undone.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteForm" method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmDelete(subjectName, subjectId) {
+    document.getElementById('subjectName').textContent = subjectName;
+    document.getElementById('deleteForm').action = '/academic/subjects/' + subjectId + '/delete/';
+    var deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    deleteModal.show();
+}
+</script>
+{% endcomment %}
+{% endblock %}

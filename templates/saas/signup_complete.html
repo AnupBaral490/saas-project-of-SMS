@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+
+{% block title %}Welcome - Student Management SaaS{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow text-center">
+                <div class="card-body p-5">
+                    <div class="mb-4">
+                        <i class="fas fa-check-circle" style="font-size: 4rem; color: #28a745;"></i>
+                    </div>
+                    
+                    <h2 class="card-title mb-3">Welcome to Student Management System!</h2>
+                    
+                    <p class="lead text-muted mb-4">
+                        Your organization <strong>{{ organization.name }}</strong> is ready to go.
+                    </p>
+                    
+                    <div class="alert alert-success">
+                        <h5 class="alert-heading">Setup Complete!</h5>
+                        <p class="mb-0">
+                            Your account has been created and is fully provisioned. 
+                            You can now start managing your school.
+                        </p>
+                    </div>
+                    
+                    <div class="row my-4">
+                        <div class="col-md-6">
+                            <div class="card border-0 bg-light">
+                                <div class="card-body">
+                                    <h5 class="card-title">Account Details</h5>
+                                    <p class="card-text">
+                                        <strong>Email:</strong> {{ user.email }}<br>
+                                        <strong>Organization:</strong> {{ organization.name }}<br>
+                                        <strong>Subdomain:</strong> {{ organization.subdomain }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card border-0 bg-light">
+                                <div class="card-body">
+                                    <h5 class="card-title">Quick Links</h5>
+                                    <p class="card-text">
+                                        <a href="{% url 'accounts:dashboard' %}" class="btn btn-sm btn-primary">
+                                            Go to Dashboard
+                                        </a><br><br>
+                                        <a href="{% url 'saas:dashboard' %}" class="btn btn-sm btn-secondary">
+                                            Billing & Settings
+                                        </a>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <strong>Next Steps:</strong>
+                        <ul class="mb-0 mt-2 text-left">
+                            <li>Add your first teachers and students</li>
+                            <li>Configure attendance tracking settings</li>
+                            <li>Set up your course structure</li>
+                            <li>Invite other administrators</li>
+                        </ul>
+                    </div>
+                    
+                    <a href="{% url 'accounts:dashboard' %}" class="btn btn-primary btn-lg">
+                        Get Started
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

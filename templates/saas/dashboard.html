@@ -1,0 +1,182 @@
+{% extends 'base.html' %}
+
+{% block title %}Billing Dashboard - Student Management SaaS{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2>Billing & Subscription</h2>
+            <p class="text-muted">Manage your subscription, invoices, and payment methods</p>
+        </div>
+    </div>
+    
+    {% if subscription %}
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Current Plan</h5>
+                    <h3 class="text-primary mb-3">{{ subscription.plan.name }}</h3>
+                    <p class="mb-1"><strong>${{ subscription.plan.price }}</strong>/{{ subscription.plan.billing_cycle }}</p>
+                    
+                    {% if subscription.status == 'trial' %}
+                        <div class="alert alert-info mt-3 mb-0">
+                            <strong>Trial Period</strong><br>
+                            {{ subscription.days_remaining_in_trial }} days remaining
+                        </div>
+                    {% elif subscription.status == 'active' %}
+                        <div class="alert alert-success mt-3 mb-0">
+                            <strong>Active</strong><br>
+                            Renews in {{ subscription.days_remaining_in_period }} days
+                        </div>
+                    {% else %}
+                        <div class="alert alert-warning mt-3 mb-0">
+                            <strong>{{ subscription.get_status_display }}</strong>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Usage</h5>
+                    
+                    <div class="mb-3">
+                        <label>Students</label>
+                        <div class="progress" style="height: 25px;">
+                            <div class="progress-bar" role="progressbar" 
+                                 style="width: {{ student_count|default:'0' }}%; 
+                                         {% if subscription.plan.max_students %}
+                                            max-width: {{ student_count|default:'0'|add:':' }}{{ subscription.plan.max_students }}%;
+                                         {% endif %}"
+                                 aria-valuenow="{{ student_count|default:'0' }}" aria-valuemin="0"
+                                 {% if subscription.plan.max_students %}
+                                    aria-valuemax="{{ subscription.plan.max_students }}"
+                                 {% endif %}>
+                                {{ student_count|default:'0' }}{% if subscription.plan.max_students %}/{{ subscription.plan.max_students }}{% else %} of unlimited{% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label>Teachers</label>
+                        <div class="progress" style="height: 25px;">
+                            <div class="progress-bar bg-success" role="progressbar"
+                                 style="width: {% if subscription.plan.max_teachers %}{{ teacher_count|default:'0'|add:':' }}{{ subscription.plan.max_teachers }}%{% else %}100%{% endif %}"
+                                 aria-valuenow="{{ teacher_count|default:'0' }}" aria-valuemin="0"
+                                 {% if subscription.plan.max_teachers %}
+                                    aria-valuemax="{{ subscription.plan.max_teachers }}"
+                                 {% endif %}>
+                                {{ teacher_count|default:'0' }}{% if subscription.plan.max_teachers %}/{{ subscription.plan.max_teachers }}{% else %} of unlimited{% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Features</h5>
+                    <ul class="list-unstyled small">
+                        {% if subscription.plan.feature_flags.attendance_tracking %}
+                            <li><i class="fas fa-check text-success"></i> Attendance Tracking</li>
+                        {% endif %}
+                        {% if subscription.plan.feature_flags.grade_management %}
+                            <li><i class="fas fa-check text-success"></i> Grade Management</li>
+                        {% endif %}
+                        {% if subscription.plan.feature_flags.fee_management %}
+                            <li><i class="fas fa-check text-success"></i> Fee Management</li>
+                        {% endif %}
+                        {% if subscription.plan.feature_flags.advanced_reports %}
+                            <li><i class="fas fa-check text-success"></i> Advanced Reports</li>
+                        {% endif %}
+                        {% if subscription.plan.feature_flags.api_access %}
+                            <li><i class="fas fa-check text-success"></i> API Access</li>
+                        {% endif %}
+                        {% if subscription.plan.feature_flags.custom_branding %}
+                            <li><i class="fas fa-check text-success"></i> Custom Branding</li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-warning">
+        You don't have an active subscription. 
+        <a href="{% url 'saas:signup_step3_plan' %}">Choose a plan</a>
+    </div>
+    {% endif %}
+    
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Recent Invoices</h5>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Invoice #</th>
+                                <th>Date</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Due Date</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for invoice in recent_invoices %}
+                            <tr>
+                                <td><strong>INV-{{ invoice.invoice_number }}</strong></td>
+                                <td>{{ invoice.issued_at|date:'M d, Y' }}</td>
+                                <td>${{ invoice.total_amount }}</td>
+                                <td>
+                                    {% if invoice.status == 'paid' %}
+                                        <span class="badge badge-success">Paid</span>
+                                    {% elif invoice.status == 'pending' %}
+                                        <span class="badge badge-warning">Pending</span>
+                                    {% elif invoice.status == 'failed' %}
+                                        <span class="badge badge-danger">Failed</span>
+                                    {% else %}
+                                        <span class="badge badge-secondary">{{ invoice.get_status_display }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if invoice.due_date %}
+                                        {{ invoice.due_date|date:'M d, Y' }}
+                                        {% if invoice.is_overdue %}
+                                            <i class="fas fa-exclamation-triangle text-danger"></i>
+                                        {% endif %}
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{% url 'saas:invoice_detail' invoice.id %}" 
+                                       class="btn btn-sm btn-outline-primary">
+                                        View
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-4">
+                                    No invoices yet
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

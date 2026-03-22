@@ -1,0 +1,219 @@
+{% extends 'base.html' %}
+
+{% block title %}Assignments - SMS{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-tasks"></i> 
+                {% if user.user_type == 'teacher' %}My Assignments{% else %}All Assignments{% endif %}
+            </h2>
+            {% if user.user_type == 'teacher' or user.user_type == 'admin' %}
+            <a href="{% url 'academic:create_assignment' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Create Assignment
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Filter Section -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <form method="get" class="row g-3">
+                    <div class="col-md-3">
+                        <label for="subject" class="form-label">Subject</label>
+                        <select name="subject" id="subject" class="form-select">
+                            <option value="">All Subjects</option>
+                            {% for subject in subjects %}
+                                <option value="{{ subject.id }}" {% if subject_filter == subject.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ subject.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="assignment_type" class="form-label">Type</label>
+                        <select name="assignment_type" id="assignment_type" class="form-select">
+                            <option value="">All Types</option>
+                            <option value="homework" {% if type_filter == 'homework' %}selected{% endif %}>Homework</option>
+                            <option value="project" {% if type_filter == 'project' %}selected{% endif %}>Project</option>
+                            <option value="quiz" {% if type_filter == 'quiz' %}selected{% endif %}>Quiz</option>
+                            <option value="lab" {% if type_filter == 'lab' %}selected{% endif %}>Lab</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="status" class="form-label">Status</label>
+                        <select name="status" id="status" class="form-select">
+                            <option value="">All Status</option>
+                            <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
+                            <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">&nbsp;</label>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search"></i> Filter
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Assignments List -->
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h6 class="m-0"><i class="fas fa-list"></i> Assignments ({{ assignments.count }})</h6>
+            </div>
+            <div class="card-body">
+                {% if assignments %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Assignment</th>
+                                <th>Subject</th>
+                                <th>Class</th>
+                                {% if user.user_type == 'admin' %}
+                                <th>Teacher</th>
+                                {% endif %}
+                                <th>Due Date</th>
+                                <th>Submissions</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for assignment in assignments %}
+                            <tr>
+                                <td>
+                                    <div>
+                                        <strong>{{ assignment.title }}</strong>
+                                        <br><small class="text-muted">{{ assignment.assignment_type|title }}</small>
+                                    </div>
+                                </td>
+                                <td>{{ assignment.subject.name }}</td>
+                                <td>{{ assignment.class_assigned.name }}</td>
+                                {% if user.user_type == 'admin' %}
+                                <td>{{ assignment.teacher.user.get_full_name|default:assignment.teacher.user.username }}</td>
+                                {% endif %}
+                                <td>
+                                    <span class="{% if assignment.due_date < today %}text-danger{% else %}text-info{% endif %}">
+                                        {{ assignment.due_date|date:"M d, Y" }}
+                                    </span>
+                                    <br><small class="text-muted">{{ assignment.due_date|date:"g:i A" }}</small>
+                                    {% if assignment.due_date < today %}
+                                        <br><span class="badge bg-danger">Overdue</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% with total_students=assignment.class_assigned.studentenrollment_set.count %}
+                                        {% with submitted=assignment.assignmentsubmission_set.count %}
+                                        <span class="badge bg-primary">{{ submitted }}/{{ total_students }}</span>
+                                        <br><small class="text-muted">
+                                            {% if total_students > 0 %}
+                                                {% widthratio submitted total_students 100 %}% submitted
+                                            {% else %}
+                                                No students
+                                            {% endif %}
+                                        </small>
+                                        {% endwith %}
+                                    {% endwith %}
+                                </td>
+                                <td>
+                                    {% if assignment.is_active %}
+                                        <span class="badge bg-success">Active</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Inactive</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="{% url 'academic:assignment_detail' assignment.id %}" class="btn btn-sm btn-outline-info" title="View Details">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        {% if user.user_type == 'teacher' and assignment.teacher == user.teacher_profile or user.user_type == 'admin' %}
+                                        <a href="{% url 'academic:edit_assignment' assignment.id %}" class="btn btn-sm btn-outline-warning" title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="{% url 'academic:assignment_submissions' assignment.id %}" class="btn btn-sm btn-outline-success" title="Submissions">
+                                            <i class="fas fa-file-alt"></i>
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-tasks fa-4x text-muted mb-3"></i>
+                    <h5 class="text-muted">No Assignments Found</h5>
+                    <p class="text-muted">
+                        {% if user.user_type == 'teacher' %}
+                            You haven't created any assignments yet.
+                        {% else %}
+                            No assignments have been created yet.
+                        {% endif %}
+                    </p>
+                    {% if user.user_type == 'teacher' or user.user_type == 'admin' %}
+                    <a href="{% url 'academic:create_assignment' %}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Create Your First Assignment
+                    </a>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+{% if assignments %}
+<div class="row mt-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body text-center">
+                <h4>{{ assignments.count }}</h4>
+                <small>Total Assignments</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body text-center">
+                <h4>{{ active_count }}</h4>
+                <small>Active Assignments</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body text-center">
+                <h4>{{ overdue_count }}</h4>
+                <small>Overdue Assignments</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body text-center">
+                <h4>{{ total_submissions }}</h4>
+                <small>Total Submissions</small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

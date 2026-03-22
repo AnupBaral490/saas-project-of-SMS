@@ -1,0 +1,39 @@
+{% extends 'academic/create_semester_enrollment.html' %}
+
+{% block title %}Edit Semester Enrollment - SMS{% endblock %}
+
+<!-- Override the form submit button text -->
+{% block content %}
+{{ block.super }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Change the submit button text for edit mode
+    const submitButton = document.querySelector('button[type="submit"]');
+    if (submitButton) {
+        submitButton.innerHTML = '<i class="fas fa-save"></i> Update Enrollment';
+    }
+    
+    // Add enrollment history information if available
+    const cardBody = document.querySelector('.card-body');
+    if (cardBody && '{{ enrollment.created_at }}') {
+        const historyInfo = document.createElement('div');
+        historyInfo.className = 'alert alert-info mt-3';
+        historyInfo.innerHTML = `
+            <h6><i class="fas fa-history"></i> Enrollment History</h6>
+            <ul class="mb-0">
+                <li><strong>Created:</strong> {{ enrollment.created_at|date:"M d, Y H:i" }}</li>
+                <li><strong>Last Updated:</strong> {{ enrollment.updated_at|date:"M d, Y H:i" }}</li>
+                {% if enrollment.approved_by %}
+                <li><strong>Approved By:</strong> {{ enrollment.approved_by.user.get_full_name }}</li>
+                <li><strong>Approved Date:</strong> {{ enrollment.approved_date|date:"M d, Y H:i" }}</li>
+                {% endif %}
+                {% if enrollment.rejection_reason %}
+                <li><strong>Rejection Reason:</strong> {{ enrollment.rejection_reason }}</li>
+                {% endif %}
+            </ul>
+        `;
+        cardBody.appendChild(historyInfo);
+    }
+});
+</script>
+{% endblock %}

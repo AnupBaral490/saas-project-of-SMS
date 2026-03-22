@@ -1,0 +1,203 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ class_obj.name }} - Class Details - SMS{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2><i class="fas fa-chalkboard"></i> {{ class_obj.name }}</h2>
+                <p class="text-muted mb-0">{{ class_obj.course.name }} - {{ class_obj.course.department.name }}</p>
+            </div>
+            <div>
+                <a href="{% url 'academic:class_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Classes
+                </a>
+                {% if can_manage %}
+                <a href="{% url 'academic:teacher_class_students' class_obj.id %}" class="btn btn-primary">
+                    <i class="fas fa-users"></i> View Students
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Class Information -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-info-circle"></i> Class Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <table class="table table-borderless">
+                            <tr>
+                                <td><strong>Class Name:</strong></td>
+                                <td>{{ class_obj.name }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Course:</strong></td>
+                                <td>{{ class_obj.course.name }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Department:</strong></td>
+                                <td>{{ class_obj.course.department.name }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Year:</strong></td>
+                                <td>{{ class_obj.year }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <table class="table table-borderless">
+                            <tr>
+                                <td><strong>Semester:</strong></td>
+                                <td>{{ class_obj.semester }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Section:</strong></td>
+                                <td>{{ class_obj.section }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Academic Year:</strong></td>
+                                <td>{{ class_obj.academic_year.year }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Class Teacher:</strong></td>
+                                <td>
+                                    {% if class_obj.class_teacher %}
+                                        {{ class_obj.class_teacher.user.get_full_name }}
+                                    {% else %}
+                                        <span class="text-muted">Not assigned</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Statistics -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-chart-bar"></i> Statistics</h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-3">
+                    <h3 class="text-primary">{{ enrollments.count }}</h3>
+                    <p class="mb-0">Total Students</p>
+                </div>
+                <div class="text-center mb-3">
+                    <h3 class="text-success">{{ teacher_assignments|length }}</h3>
+                    <p class="mb-0">Subject Assignments</p>
+                </div>
+                <div class="text-center">
+                    <h3 class="text-info">{{ teacher_assignments|regroup:"teacher"|length }}</h3>
+                    <p class="mb-0">Teachers</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Teacher Assignments -->
+{% if teacher_assignments %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-chalkboard-teacher"></i> Teacher Assignments</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Subject</th>
+                                <th>Subject Code</th>
+                                <th>Teacher</th>
+                                <th>Academic Year</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for assignment in teacher_assignments %}
+                            <tr>
+                                <td>{{ assignment.subject.name }}</td>
+                                <td><span class="badge bg-primary">{{ assignment.subject.code }}</span></td>
+                                <td>{{ assignment.teacher.user.get_full_name }}</td>
+                                <td>{{ assignment.academic_year.year }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Students -->
+{% if enrollments %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-users"></i> Enrolled Students</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Student ID</th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Enrollment Date</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for enrollment in enrollments %}
+                            <tr>
+                                <td>{{ enrollment.student.student_id }}</td>
+                                <td>{{ enrollment.student.user.get_full_name }}</td>
+                                <td>{{ enrollment.student.user.email }}</td>
+                                <td>{{ enrollment.enrollment_date|date:"M d, Y" }}</td>
+                                <td>
+                                    {% if enrollment.is_active %}
+                                        <span class="badge bg-success">Active</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Inactive</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body text-center text-muted py-4">
+                <i class="fas fa-users fa-3x mb-3"></i>
+                <br>No students enrolled in this class yet.
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

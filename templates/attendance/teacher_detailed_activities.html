@@ -1,0 +1,284 @@
+{% extends 'base.html' %}
+
+{% block title %}Teacher Detailed Activities - SMS{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2><i class="fas fa-tasks"></i> Teacher Detailed Activities</h2>
+        <p class="text-muted">Real-time tracking of specific teacher activities with timestamps</p>
+    </div>
+</div>
+
+<!-- Teacher Selection -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <form method="get" class="d-flex gap-2">
+            <select name="teacher" class="form-control" onchange="this.form.submit()">
+                <option value="">Select Teacher</option>
+                {% for teacher in teachers %}
+                <option value="{{ teacher.id }}" {% if selected_teacher_id == teacher.id %}selected{% endif %}>
+                    {{ teacher.user.get_full_name }}
+                </option>
+                {% endfor %}
+            </select>
+            <input type="date" name="date" value="{{ selected_date }}" class="form-control" onchange="this.form.submit()">
+        </form>
+    </div>
+    <div class="col-md-6 text-end">
+        <button class="btn btn-success" onclick="location.reload()">
+            <i class="fas fa-sync"></i> Refresh
+        </button>
+        <a href="{% url 'attendance:teacher_activity_timeline' %}" class="btn btn-info">
+            <i class="fas fa-timeline"></i> Timeline View
+        </a>
+    </div>
+</div>
+
+{% if selected_teacher %}
+<!-- Teacher Info Card -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card bg-gradient-primary text-white">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h4><i class="fas fa-user"></i> {{ selected_teacher.user.get_full_name }}</h4>
+                        <p class="mb-0">{{ selected_teacher.department }} | {{ selected_teacher.employee_id }}</p>
+                        <small>{{ selected_teacher.user.email }}</small>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        {% if attendance_record %}
+                        <h5>
+                            {% if attendance_record.status == 'present' %}
+                                <span class="badge bg-success">Present</span>
+                            {% elif attendance_record.status == 'late' %}
+                                <span class="badge bg-warning">Late</span>
+                            {% elif attendance_record.status == 'absent' %}
+                                <span class="badge bg-danger">Absent</span>
+                            {% else %}
+                                <span class="badge bg-secondary">{{ attendance_record.get_status_display }}</span>
+                            {% endif %}
+                        </h5>
+                        <p class="mb-0">{{ attendance_record.total_hours|floatformat:1 }} hours worked</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Activity Categories -->
+<div class="row mb-4">
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card bg-gradient-success text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-check-circle fa-3x mb-2"></i>
+                <h4>{{ attendance_count }}</h4>
+                <p class="mb-0">Attendance Marked</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card bg-gradient-warning text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-tasks fa-3x mb-2"></i>
+                <h4>{{ assignment_count }}</h4>
+                <p class="mb-0">Assignments Created</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card bg-gradient-info text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-star fa-3x mb-2"></i>
+                <h4>{{ grading_count }}</h4>
+                <p class="mb-0">Grading Activities</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card bg-gradient-secondary text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-envelope fa-3x mb-2"></i>
+                <h4>{{ message_count }}</h4>
+                <p class="mb-0">Messages Sent</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Detailed Activity Breakdown -->
+<div class="row">
+    <!-- Attendance Activities -->
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <h6 class="m-0"><i class="fas fa-check-circle"></i> Attendance Activities</h6>
+            </div>
+            <div class="card-body">
+                {% if attendance_activities %}
+                {% for activity in attendance_activities %}
+                <div class="d-flex justify-content-between align-items-center mb-3 p-2 bg-light rounded">
+                    <div>
+                        <strong>{{ activity.timestamp|time:"H:i:s" }}</strong>
+                        <p class="mb-0 text-muted">{{ activity.description }}</p>
+                    </div>
+                    <span class="badge bg-success">Attendance</span>
+                </div>
+                {% endfor %}
+                {% else %}
+                <p class="text-muted text-center">No attendance activities recorded</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Assignment Activities -->
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header bg-warning text-white">
+                <h6 class="m-0"><i class="fas fa-tasks"></i> Assignment Activities</h6>
+            </div>
+            <div class="card-body">
+                {% if assignment_activities %}
+                {% for activity in assignment_activities %}
+                <div class="d-flex justify-content-between align-items-center mb-3 p-2 bg-light rounded">
+                    <div>
+                        <strong>{{ activity.timestamp|time:"H:i:s" }}</strong>
+                        <p class="mb-0 text-muted">{{ activity.description }}</p>
+                    </div>
+                    <span class="badge bg-warning">Assignment</span>
+                </div>
+                {% endfor %}
+                {% else %}
+                <p class="text-muted text-center">No assignment activities recorded</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Grading Activities -->
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header bg-info text-white">
+                <h6 class="m-0"><i class="fas fa-star"></i> Grading Activities</h6>
+            </div>
+            <div class="card-body">
+                {% if grading_activities %}
+                {% for activity in grading_activities %}
+                <div class="d-flex justify-content-between align-items-center mb-3 p-2 bg-light rounded">
+                    <div>
+                        <strong>{{ activity.timestamp|time:"H:i:s" }}</strong>
+                        <p class="mb-0 text-muted">{{ activity.description }}</p>
+                    </div>
+                    <span class="badge bg-info">Grading</span>
+                </div>
+                {% endfor %}
+                {% else %}
+                <p class="text-muted text-center">No grading activities recorded</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Communication Activities -->
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header bg-secondary text-white">
+                <h6 class="m-0"><i class="fas fa-envelope"></i> Communication Activities</h6>
+            </div>
+            <div class="card-body">
+                {% if communication_activities %}
+                {% for activity in communication_activities %}
+                <div class="d-flex justify-content-between align-items-center mb-3 p-2 bg-light rounded">
+                    <div>
+                        <strong>{{ activity.timestamp|time:"H:i:s" }}</strong>
+                        <p class="mb-0 text-muted">{{ activity.description }}</p>
+                    </div>
+                    <span class="badge bg-secondary">Message</span>
+                </div>
+                {% endfor %}
+                {% else %}
+                <p class="text-muted text-center">No communication activities recorded</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Activity Summary -->
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header bg-dark text-white">
+                <h6 class="m-0"><i class="fas fa-chart-line"></i> Activity Summary for {{ selected_date }}</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Work Pattern Analysis:</h6>
+                        <ul class="list-unstyled">
+                            {% if attendance_record.first_activity_time %}
+                            <li><i class="fas fa-clock text-success"></i> First Activity: {{ attendance_record.first_activity_time|time:"H:i:s" }}</li>
+                            {% endif %}
+                            {% if attendance_record.last_activity_time %}
+                            <li><i class="fas fa-clock text-danger"></i> Last Activity: {{ attendance_record.last_activity_time|time:"H:i:s" }}</li>
+                            {% endif %}
+                            <li><i class="fas fa-hourglass-half text-info"></i> Total Active Hours: {{ attendance_record.total_hours|floatformat:1 }}</li>
+                            <li><i class="fas fa-tasks text-warning"></i> Total Activities: {{ total_activities }}</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Productivity Metrics:</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-percentage text-success"></i> Educational Activities: {{ educational_percentage|floatformat:1 }}%</li>
+                            <li><i class="fas fa-check-circle text-primary"></i> Duties Completed: {{ duties_completed }}</li>
+                            <li><i class="fas fa-exclamation-triangle text-warning"></i> Missed Duties: {{ duties_missed }}</li>
+                            <li><i class="fas fa-thumbs-up text-success"></i> Performance: 
+                                {% if educational_percentage >= 80 %}
+                                    <span class="badge bg-success">Excellent</span>
+                                {% elif educational_percentage >= 60 %}
+                                    <span class="badge bg-warning">Good</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Needs Improvement</span>
+                                {% endif %}
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% else %}
+<!-- No Teacher Selected -->
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-user-plus fa-4x text-muted mb-3"></i>
+                <h4 class="text-muted">Select a Teacher</h4>
+                <p class="text-muted">Choose a teacher from the dropdown above to view their detailed activity breakdown.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<script>
+// Auto-refresh every 3 minutes if a teacher is selected
+{% if selected_teacher %}
+setInterval(function() {
+    if (document.visibilityState === 'visible') {
+        location.reload();
+    }
+}, 180000);
+{% endif %}
+</script>
+{% endblock %}

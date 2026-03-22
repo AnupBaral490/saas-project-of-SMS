@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+
+{% block title %}Courses - SMS{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-book"></i> Course Management</h2>
+            <div>
+                <a href="{% url 'academic:student_enrollment_report' %}" class="btn btn-info me-2">
+                    <i class="fas fa-chart-bar"></i> Enrollment Report
+                </a>
+                {% if can_manage %}
+                <div class="btn-group" role="group">
+                    <a href="{% url 'academic:create_course' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-plus"></i> Quick Add
+                    </a>
+                    <a href="{% url 'academic:create_course_enhanced' %}" class="btn btn-primary">
+                        <i class="fas fa-magic"></i> Enhanced Course Creator
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if courses %}
+<!-- Summary Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6>Total Courses</h6>
+                        <h4>{{ total_courses }}</h4>
+                    </div>
+                    <i class="fas fa-book fa-2x"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6>Total Students</h6>
+                        <h4>{{ total_students }}</h4>
+                    </div>
+                    <i class="fas fa-users fa-2x"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6>Total Subjects</h6>
+                        <h4>{{ total_subjects }}</h4>
+                    </div>
+                    <i class="fas fa-book-open fa-2x"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6>Avg Students/Course</h6>
+                        <h4>{{ avg_students_per_course }}</h4>
+                    </div>
+                    <i class="fas fa-chart-bar fa-2x"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h6 class="m-0"><i class="fas fa-list"></i> All Courses</h6>
+            </div>
+            <div class="card-body">
+                {% if courses %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Course Code</th>
+                                <th>Course Name</th>
+                                <th>Department</th>
+                                <th>Duration</th>
+                                <th>Subjects</th>
+                                <th>Students</th>
+                                {% if can_manage %}
+                                <th>Actions</th>
+                                {% endif %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for course in courses %}
+                            <tr>
+                                <td><strong>{{ course.code }}</strong></td>
+                                <td>{{ course.name }}</td>
+                                <td>{{ course.department.name }}</td>
+                                <td>{{ course.duration_years }} years</td>
+                                <td>
+                                    <span class="badge bg-info">{{ course.subject_count }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-success fs-6 px-3 py-2">{{ course.student_count }} students</span>
+                                </td>
+                                {% if can_manage %}
+                                <td>
+                                    <a href="{% url 'academic:course_detail' course.id %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                    <a href="{% url 'academic:edit_course' course.id %}" class="btn btn-sm btn-outline-warning">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </a>
+                                </td>
+                                {% endif %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-book fa-4x text-muted mb-4"></i>
+                    <h4 class="text-muted">No Courses Found</h4>
+                    <p class="text-muted">No courses have been created yet.</p>
+                    {% if can_manage %}
+                    <div class="btn-group" role="group">
+                        <a href="{% url 'academic:create_course' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-plus"></i> Quick Create
+                        </a>
+                        <a href="{% url 'academic:create_course_enhanced' %}" class="btn btn-primary">
+                            <i class="fas fa-magic"></i> Enhanced Creator
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

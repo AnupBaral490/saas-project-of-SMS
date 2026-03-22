@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+
+{% block title %}Invoice {{ invoice.invoice_number }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">Invoice INV-{{ invoice.invoice_number }}</h4>
+                    <div>
+                        {% if invoice.status == 'paid' %}
+                            <span class="badge badge-success badge-lg">PAID</span>
+                        {% elif invoice.status == 'pending' %}
+                            <span class="badge badge-warning badge-lg">PENDING</span>
+                        {% elif invoice.status == 'failed' %}
+                            <span class="badge badge-danger badge-lg">FAILED</span>
+                        {% else %}
+                            <span class="badge badge-secondary badge-lg">{{ invoice.get_status_display|upper }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h5>From</h5>
+                            <p>
+                                <strong>Student Management System</strong><br>
+                                {{ organization.contact_email }}
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Bill To</h5>
+                            <p>
+                                <strong>{{ invoice.organization.name }}</strong><br>
+                                {{ invoice.organization.contact_email }}<br>
+                                {% if invoice.organization.phone %}
+                                    {{ invoice.organization.phone }}
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-4 border-top border-bottom py-3">
+                        <div class="col-md-3">
+                            <strong>Invoice Date</strong><br>
+                            {{ invoice.issued_at|date:'M d, Y' }}
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Due Date</strong><br>
+                            {% if invoice.due_date %}
+                                {{ invoice.due_date|date:'M d, Y' }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Billing Period</strong><br>
+                            {% if invoice.billing_period_start %}
+                                {{ invoice.billing_period_start|date:'M d' }} - {{ invoice.billing_period_end|date:'M d, Y' }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Invoice #</strong><br>
+                            INV-{{ invoice.invoice_number }}
+                        </div>
+                    </div>
+                    
+                    <div class="table-responsive mb-4">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Description</th>
+                                    <th class="text-right">Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <strong>{{ invoice.subscription.plan.name }} Subscription</strong><br>
+                                        <small class="text-muted">{{ invoice.description }}</small>
+                                    </td>
+                                    <td class="text-right">${{ invoice.amount }}</td>
+                                </tr>
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="2">
+                                        <hr>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Subtotal</th>
+                                    <th class="text-right">${{ invoice.amount }}</th>
+                                </tr>
+                                {% if invoice.tax %}
+                                <tr>
+                                    <th>Tax</th>
+                                    <th class="text-right">${{ invoice.tax }}</th>
+                                </tr>
+                                {% endif %}
+                                <tr class="table-info">
+                                    <th>Total Due</th>
+                                    <th class="text-right"><h5>${{ invoice.total_amount }}</h5></th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    
+                    {% if invoice.status != 'paid' %}
+                    <div class="alert alert-info">
+                        <strong>Payment Status:</strong> 
+                        {% if invoice.is_overdue %}
+                            <span class="text-danger">This invoice is overdue.</span>
+                        {% else %}
+                            <span>Payment is due on {{ invoice.due_date|date:'M d, Y' }}</span>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mt-4">
+                        <a href="{% url 'saas:dashboard' %}" class="btn btn-secondary">
+                            Back to Billing
+                        </a>
+                        <button onclick="window.print()" class="btn btn-primary">
+                            <i class="fas fa-print"></i> Print Invoice
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,108 @@
+{% extends "admin/change_list.html" %}
+{% load i18n admin_urls static admin_list %}
+
+{% block content %}
+<div id="content-main">
+    {% block object-tools %}
+        {% block object-tools-items %}
+            {{ block.super }}
+        {% endblock %}
+    {% endblock %}
+
+    {% if show_grouped_view %}
+    <div class="module" style="margin-bottom: 20px;">
+        <h2 style="background: #417690; color: white; padding: 10px; margin: 0;">
+            Attendance Records Grouped by Class/Course
+        </h2>
+        <div style="padding: 15px; background: #f8f9fa;">
+            <p style="margin: 0 0 10px 0; color: #666;">
+                <strong>Total Records:</strong> {{ cl.result_count }} | 
+                <strong>Showing:</strong> {{ cl.result_list|length }} records
+            </p>
+            
+            {% for course_name, classes in grouped_records.items %}
+            <div style="margin-bottom: 25px; border: 1px solid #ddd; border-radius: 5px; overflow: hidden;">
+                <h3 style="background: #79aec8; color: white; padding: 10px; margin: 0; font-size: 16px;">
+                    📚 {{ course_name }}
+                </h3>
+                
+                {% for class_key, records in classes.items %}
+                <div style="margin: 15px; border: 1px solid #e0e0e0; border-radius: 4px; overflow: hidden;">
+                    <h4 style="background: #f0f0f0; padding: 8px 12px; margin: 0; font-size: 14px; color: #333;">
+                        📖 {{ class_key }}
+                        <span style="float: right; background: #417690; color: white; padding: 2px 8px; border-radius: 3px; font-size: 12px;">
+                            {{ records|length }} record{{ records|length|pluralize }}
+                        </span>
+                    </h4>
+                    
+                    <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                        <thead style="background: #fafafa;">
+                            <tr>
+                                <th style="padding: 8px; text-align: left; border-bottom: 2px solid #ddd;">Student Name</th>
+                                <th style="padding: 8px; text-align: left; border-bottom: 2px solid #ddd;">Student ID</th>
+                                <th style="padding: 8px; text-align: left; border-bottom: 2px solid #ddd;">Session Date</th>
+                                <th style="padding: 8px; text-align: center; border-bottom: 2px solid #ddd;">Status</th>
+                                <th style="padding: 8px; text-align: left; border-bottom: 2px solid #ddd;">Marked At</th>
+                                <th style="padding: 8px; text-align: center; border-bottom: 2px solid #ddd;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for record in records %}
+                            <tr style="{% cycle 'background: white;' 'background: #f9f9f9;' %}">
+                                <td style="padding: 8px; border-bottom: 1px solid #eee;">
+                                    {% if record.student.user.get_full_name %}
+                                        {{ record.student.user.get_full_name }}
+                                    {% else %}
+                                        {{ record.student.user.username }}
+                                    {% endif %}
+                                </td>
+                                <td style="padding: 8px; border-bottom: 1px solid #eee;">
+                                    {{ record.student.student_id }}
+                                </td>
+                                <td style="padding: 8px; border-bottom: 1px solid #eee;">
+                                    {{ record.session.date|date:"M d, Y" }}
+                                </td>
+                                <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">
+                                    {% if record.status == 'present' %}
+                                        <span style="background-color: #28a745; color: white; padding: 3px 10px; border-radius: 3px; font-weight: bold;">Present</span>
+                                    {% elif record.status == 'absent' %}
+                                        <span style="background-color: #dc3545; color: white; padding: 3px 10px; border-radius: 3px; font-weight: bold;">Absent</span>
+                                    {% elif record.status == 'late' %}
+                                        <span style="background-color: #ffc107; color: white; padding: 3px 10px; border-radius: 3px; font-weight: bold;">Late</span>
+                                    {% elif record.status == 'excused' %}
+                                        <span style="background-color: #17a2b8; color: white; padding: 3px 10px; border-radius: 3px; font-weight: bold;">Excused</span>
+                                    {% endif %}
+                                </td>
+                                <td style="padding: 8px; border-bottom: 1px solid #eee;">
+                                    {{ record.marked_at|date:"M d, Y, g:i a" }}
+                                </td>
+                                <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">
+                                    <a href="{% url 'admin:attendance_attendancerecord_change' record.pk %}" 
+                                       style="color: #417690; text-decoration: none; margin-right: 10px;">
+                                        ✏️ Edit
+                                    </a>
+                                    <a href="{% url 'admin:attendance_attendancerecord_delete' record.pk %}" 
+                                       style="color: #dc3545; text-decoration: none;">
+                                        🗑️ Delete
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% endfor %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="module">
+        <h2 style="background: #417690; color: white; padding: 10px; margin: 0;">
+            Standard List View (All Records)
+        </h2>
+        {{ block.super }}
+    </div>
+</div>
+{% endblock %}

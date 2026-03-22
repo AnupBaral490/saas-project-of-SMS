@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Edit User - SMS{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-user-edit"></i> Edit User: {{ user_obj.get_full_name|default:user_obj.username }}</h2>
+            <a href="{% url 'accounts:admin_user_list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Users
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow">
+            <div class="card-header bg-warning text-white">
+                <h6 class="m-0"><i class="fas fa-user-edit"></i> Edit User Information</h6>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ form.user_type|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.username|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ form.first_name|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.last_name|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ form.email|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.phone_number|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ form.date_of_birth|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.profile_picture|as_crispy_field }}
+                            {% if user_obj.profile_picture %}
+                                <div class="mt-2">
+                                    <img src="{{ user_obj.profile_picture.url }}" class="img-thumbnail" width="100">
+                                    <p class="small text-muted">Current profile picture</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-12">
+                            {{ form.address|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Note:</strong> Leave password fields empty if you don't want to change the password.
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ form.password1|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.password2|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{% url 'accounts:admin_reset_password' user_obj.id %}" class="btn btn-warning me-md-2">
+                            <i class="fas fa-key"></i> Reset Password
+                        </a>
+                        <a href="{% url 'accounts:admin_user_list' %}" class="btn btn-secondary me-md-2">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Update User
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

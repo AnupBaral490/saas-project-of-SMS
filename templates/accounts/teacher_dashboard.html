@@ -1,0 +1,3309 @@
+{% extends 'base.html' %}
+
+{% block title %}Teacher Dashboard - SMS{% endblock %}
+
+{% block content %}
+<!-- Ultra Professional Dashboard Header -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="teacher-dashboard-header-premium">
+            <!-- Animated Background Elements -->
+            <div class="header-bg-shape shape-1"></div>
+            <div class="header-bg-shape shape-2"></div>
+            <div class="header-bg-shape shape-3"></div>
+            <div class="header-bg-pattern"></div>
+            
+            <div class="header-content-premium">
+                <div class="header-left-premium">
+                    <div class="header-avatar-section">
+                        <div class="avatar-wrapper">
+                            <div class="avatar-ring"></div>
+                            <div class="avatar-icon">
+                                <i class="fas fa-user-tie"></i>
+                            </div>
+                            <div class="avatar-status"></div>
+                        </div>
+                    </div>
+                    <div class="header-text-premium">
+                        <div class="greeting-badge">
+                            <i class="fas fa-sun"></i>
+                            <span>Good Day</span>
+                        </div>
+                        <h1 class="header-title-premium">
+                            {{ user.get_full_name|default:user.username }}
+                        </h1>
+                        <p class="header-subtitle-premium">
+                            <span class="role-badge">
+                                <i class="fas fa-chalkboard-teacher"></i>
+                                Teacher Dashboard
+                            </span>
+                            <span class="divider">•</span>
+                            <span class="date-info">
+                                <i class="far fa-calendar"></i>
+                                <span id="currentDate"></span>
+                            </span>
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="header-right-premium">
+                    <div class="header-actions">
+                        <!-- Quick Action Button -->
+                        <button class="quick-action-btn" title="Quick Actions">
+                            <i class="fas fa-bolt"></i>
+                        </button>
+                        
+                        <!-- Notification Bell - Click to go to notifications page -->
+                        <a href="{% url 'notifications:notification_list' %}" class="notification-bell-premium-link" title="View All Notifications">
+                            <div class="notification-bell-premium">
+                                <i class="fas fa-bell"></i>
+                                <span class="notification-pulse"></span>
+                                <span class="notification-badge-premium" id="notificationBadge" style="display: none;">0</span>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if profile_missing %}
+<div class="row">
+    <div class="col-12">
+        <div class="alert alert-warning" role="alert">
+            <h4 class="alert-heading"><i class="fas fa-exclamation-triangle"></i> Profile Setup Required</h4>
+            <p>Your teacher profile is not set up yet. Please contact the administrator to complete your profile setup.</p>
+            <hr>
+            <p class="mb-0">Once your profile is created, you'll be able to access all teacher features including class management, attendance marking, and assignment creation.</p>
+        </div>
+    </div>
+</div>
+{% else %}
+
+<!-- Premium Statistics Grid -->
+<div class="row mb-4 g-3 stats-grid-mobile">
+    <div class="col-xl-2 col-lg-4 col-md-6 col-6">
+        <div class="stat-card-premium stat-primary">
+            <div class="stat-card-inner">
+                <div class="stat-icon-premium">
+                    <div class="icon-circle">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="icon-glow"></div>
+                </div>
+                <div class="stat-content-premium">
+                    <div class="stat-number-premium" data-target="{{ total_students }}">0</div>
+                    <div class="stat-label-premium">Total Students</div>
+                    <div class="stat-trend">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>Active</span>
+                    </div>
+                </div>
+            </div>
+            <div class="stat-wave"></div>
+        </div>
+    </div>
+    
+    <div class="col-xl-2 col-lg-4 col-md-6 col-6">
+        <div class="stat-card-premium stat-success">
+            <div class="stat-card-inner">
+                <div class="stat-icon-premium">
+                    <div class="icon-circle">
+                        <i class="fas fa-book-open"></i>
+                    </div>
+                    <div class="icon-glow"></div>
+                </div>
+                <div class="stat-content-premium">
+                    <div class="stat-number-premium" data-target="{{ total_subjects }}">0</div>
+                    <div class="stat-label-premium">Subjects Teaching</div>
+                    <div class="stat-trend">
+                        <i class="fas fa-graduation-cap"></i>
+                        <span>Teaching</span>
+                    </div>
+                </div>
+            </div>
+            <div class="stat-wave"></div>
+        </div>
+    </div>
+    
+    <div class="col-xl-2 col-lg-4 col-md-6 col-6">
+        <div class="stat-card-premium stat-info">
+            <div class="stat-card-inner">
+                <div class="stat-icon-premium">
+                    <div class="icon-circle">
+                        <i class="fas fa-tasks"></i>
+                    </div>
+                    <div class="icon-glow"></div>
+                </div>
+                <div class="stat-content-premium">
+                    <div class="stat-number-premium" data-target="{{ pending_assignments }}">0</div>
+                    <div class="stat-label-premium">Active Assignments</div>
+                    <div class="stat-trend">
+                        <i class="fas fa-clock"></i>
+                        <span>Pending</span>
+                    </div>
+                </div>
+            </div>
+            <div class="stat-wave"></div>
+        </div>
+    </div>
+    
+    <div class="col-xl-2 col-lg-4 col-md-6 col-6">
+        <div class="stat-card-premium stat-warning">
+            <div class="stat-card-inner">
+                <div class="stat-icon-premium">
+                    <div class="icon-circle">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <div class="icon-glow"></div>
+                </div>
+                <div class="stat-content-premium">
+                    <div class="stat-number-premium" data-target="{{ upcoming_exams }}">0</div>
+                    <div class="stat-label-premium">Upcoming Exams</div>
+                    <div class="stat-trend">
+                        <i class="fas fa-bell"></i>
+                        <span>Scheduled</span>
+                    </div>
+                </div>
+            </div>
+            <div class="stat-wave"></div>
+        </div>
+    </div>
+    
+    <div class="col-xl-2 col-lg-4 col-md-6 col-6">
+        <div class="stat-card-premium stat-purple">
+            <div class="stat-card-inner">
+                <div class="stat-icon-premium">
+                    <div class="icon-circle">
+                        <i class="fas fa-file-alt"></i>
+                    </div>
+                    <div class="icon-glow"></div>
+                </div>
+                <div class="stat-content-premium">
+                    <div class="stat-number-premium" data-target="{{ total_assignments_created }}">0</div>
+                    <div class="stat-label-premium">Total Assignments</div>
+                    <div class="stat-trend">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Created</span>
+                    </div>
+                </div>
+            </div>
+            <div class="stat-wave"></div>
+        </div>
+    </div>
+    
+    <div class="col-xl-2 col-lg-4 col-md-6 col-6">
+        <div class="stat-card-premium stat-danger">
+            <div class="stat-card-inner">
+                <div class="stat-icon-premium">
+                    <div class="icon-circle">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="icon-glow"></div>
+                </div>
+                <div class="stat-content-premium">
+                    <div class="stat-number-premium" data-target="{{ avg_grade }}">0</div>
+                    <div class="stat-label-premium">Average Grade</div>
+                    <div class="stat-trend">
+                        <i class="fas fa-percentage"></i>
+                        <span>Performance</span>
+                    </div>
+                </div>
+            </div>
+            <div class="stat-wave"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Counter Animation Script -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Date Display
+    const dateElement = document.getElementById('currentDate');
+    if (dateElement) {
+        const today = new Date();
+        const options = { month: 'short', day: 'numeric', year: 'numeric' };
+        dateElement.textContent = today.toLocaleDateString('en-US', options);
+    }
+    
+    // Animated Counter
+    const counters = document.querySelectorAll('.stat-number-premium');
+    counters.forEach(counter => {
+        const target = parseInt(counter.getAttribute('data-target'));
+        const duration = 2000;
+        const increment = target / (duration / 16);
+        let current = 0;
+        
+        const updateCounter = () => {
+            current += increment;
+            if (current < target) {
+                counter.textContent = Math.floor(current);
+                requestAnimationFrame(updateCounter);
+            } else {
+                counter.textContent = target + (counter.parentElement.querySelector('.stat-label-premium').textContent.includes('Grade') ? '%' : '');
+            }
+        };
+        
+        // Start animation when element is in viewport
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    updateCounter();
+                    observer.unobserve(entry.target);
+                }
+            });
+        });
+        
+        observer.observe(counter);
+    });
+});
+</script>
+
+<!-- Enhanced Statistics Charts - Professional Design -->
+<div class="row mb-4">
+    <!-- Assignment Submissions Chart -->
+    <div class="col-lg-4 col-md-6 mb-4">
+        <div class="card chart-card shadow-lg border-0 h-100">
+            <div class="card-header chart-header-gradient-primary">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center">
+                        <div class="chart-header-icon me-3">
+                            <i class="fas fa-chart-bar"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-0 text-white fw-bold">Assignment Submissions</h6>
+                            <small class="text-white-50">Submission tracking</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body p-4">
+                <div class="chart-container-responsive">
+                    <canvas id="assignmentChart"></canvas>
+                </div>
+                <div class="chart-legend-section mt-4">
+                    {% for stat in assignment_stats %}
+                    <div class="chart-stat-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center">
+                                <div class="stat-indicator stat-indicator-primary me-2"></div>
+                                <span class="stat-label">{{ stat.class_name }}</span>
+                            </div>
+                            <span class="stat-badge badge-gradient-primary">{{ stat.submission_rate }}%</span>
+                        </div>
+                        <div class="progress progress-modern mt-2">
+                            <div class="progress-bar progress-bar-gradient-primary" style="width: {{ stat.submission_rate }}%"></div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Student Passing Rate Chart -->
+    <div class="col-lg-4 col-md-6 mb-4">
+        <div class="card chart-card shadow-lg border-0 h-100">
+            <div class="card-header chart-header-gradient-success">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center">
+                        <div class="chart-header-icon me-3">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-0 text-white fw-bold">Student Passing Rate</h6>
+                            <small class="text-white-50">Performance metrics</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body p-4">
+                <div class="chart-container-responsive">
+                    <canvas id="passingChart"></canvas>
+                </div>
+                <div class="chart-legend-section mt-4">
+                    {% for stat in passing_stats %}
+                    <div class="chart-stat-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center">
+                                <div class="stat-indicator {% if stat.passing_rate >= 80 %}stat-indicator-success{% elif stat.passing_rate >= 60 %}stat-indicator-warning{% else %}stat-indicator-danger{% endif %} me-2"></div>
+                                <span class="stat-label">{{ stat.class_name }}</span>
+                            </div>
+                            <span class="stat-badge {% if stat.passing_rate >= 80 %}badge-gradient-success{% elif stat.passing_rate >= 60 %}badge-gradient-warning{% else %}badge-gradient-danger{% endif %}">
+                                {{ stat.passing_rate }}%
+                            </span>
+                        </div>
+                        <div class="progress progress-modern mt-2">
+                            <div class="progress-bar {% if stat.passing_rate >= 80 %}progress-bar-gradient-success{% elif stat.passing_rate >= 60 %}progress-bar-gradient-warning{% else %}progress-bar-gradient-danger{% endif %}" style="width: {{ stat.passing_rate }}%"></div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Syllabus Progress Chart -->
+    <div class="col-lg-4 col-md-12 mb-4">
+        <div class="card chart-card shadow-lg border-0 h-100">
+            <div class="card-header chart-header-gradient-info">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center">
+                        <div class="chart-header-icon me-3">
+                            <i class="fas fa-chart-pie"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-0 text-white fw-bold">Syllabus Progress</h6>
+                            <small class="text-white-50">Course completion</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body p-4">
+                <div class="chart-container-responsive">
+                    <canvas id="syllabusChart"></canvas>
+                </div>
+                <div class="chart-legend-section mt-4">
+                    {% for progress in syllabus_progress %}
+                    <div class="chart-stat-item">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div class="d-flex align-items-center">
+                                <div class="stat-indicator stat-indicator-info me-2"></div>
+                                <div>
+                                    <span class="stat-label d-block">{{ progress.subject_name|truncatechars:20 }}</span>
+                                    <small class="text-muted">{{ progress.class_name }}</small>
+                                </div>
+                            </div>
+                            <span class="stat-badge badge-gradient-info">{{ progress.progress_percentage }}%</span>
+                        </div>
+                        <div class="progress progress-modern">
+                            <div class="progress-bar progress-bar-gradient-info progress-bar-animated" style="width: {{ progress.progress_percentage }}%"></div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- My Classes - Grouped by Class/Semester -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow-lg border-0 classes-main-card">
+            <div class="card-header classes-header border-0">
+                <div class="d-flex justify-content-between align-items-center flex-wrap">
+                    <div class="d-flex align-items-center">
+                        <div class="header-icon-box me-3">
+                            <i class="fas fa-chalkboard"></i>
+                        </div>
+                        <div>
+                            <h4 class="m-0 fw-bold text-white">My Classes</h4>
+                            <small class="text-white-50">Manage your teaching assignments</small>
+                        </div>
+                    </div>
+                    <span class="badge badge-custom mt-2 mt-md-0">
+                        <i class="fas fa-book-reader me-1"></i>
+                        {{ teacher_assignments.count }} Subject{{ teacher_assignments.count|pluralize }}
+                    </span>
+                </div>
+            </div>
+            <div class="card-body p-4">
+                {% if teacher_assignments %}
+                    {% regroup teacher_assignments by class_assigned.name as classes_grouped %}
+                    
+                    {% for class_group in classes_grouped %}
+                    <!-- Class Section Header -->
+                    <div class="class-section-header-enhanced mb-4">
+                        <div class="d-flex align-items-center justify-content-between flex-wrap">
+                            <div class="d-flex align-items-center mb-2 mb-md-0">
+                                <div class="class-icon-badge me-3">
+                                    <i class="fas fa-graduation-cap"></i>
+                                </div>
+                                <div>
+                                    <h5 class="mb-1 fw-bold class-title">
+                                        {{ class_group.grouper }}
+                                    </h5>
+                                    <div class="class-meta">
+                                        <span class="meta-item">
+                                            <i class="fas fa-book me-1"></i>
+                                            {{ class_group.list|length }} Subject{{ class_group.list|length|pluralize }}
+                                        </span>
+                                        <span class="meta-divider">•</span>
+                                        <span class="meta-item">
+                                            <i class="fas fa-users me-1"></i>
+                                            {% with first_class=class_group.list.0.class_assigned %}
+                                                {{ first_class.studentenrollment_set.count|default:0 }} Student{{ first_class.studentenrollment_set.count|pluralize }}
+                                            {% endwith %}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Subjects in this Class -->
+                    <div class="row mb-4">
+                        {% for assignment in class_group.list %}
+                        <div class="col-xl-4 col-lg-6 col-12 mb-3">
+                            <div class="card border-0 h-100 subject-card-enhanced">
+                                <!-- Subject Header -->
+                                <div class="card-header subject-header border-0">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-2 fw-bold text-white subject-name">
+                                                <i class="fas fa-book-open me-2"></i>{{ assignment.subject.name }}
+                                            </h6>
+                                            <span class="section-badge">
+                                                <i class="fas fa-tag me-1"></i>Section {{ assignment.class_assigned.section }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Subject Body -->
+                                <div class="card-body p-3">
+                                    <!-- Student Count -->
+                                    <div class="student-count-box mb-3">
+                                        <div class="d-flex align-items-center">
+                                            <div class="student-icon-circle me-3">
+                                                <i class="fas fa-user-graduate"></i>
+                                            </div>
+                                            <div>
+                                                <h5 class="mb-0 fw-bold text-primary">
+                                                    {{ assignment.class_assigned.studentenrollment_set.count|default:0 }}
+                                                </h5>
+                                                <small class="text-muted">Student{{ assignment.class_assigned.studentenrollment_set.count|pluralize }} Enrolled</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Quick Actions -->
+                                    <div class="action-buttons">
+                                        <a href="{% url 'academic:teacher_class_students' assignment.class_assigned.id %}" class="action-btn action-btn-primary">
+                                            <i class="fas fa-users"></i>
+                                            <span>Students</span>
+                                        </a>
+                                        <a href="{% url 'attendance:mark_attendance' %}?class={{ assignment.class_assigned.id }}&subject={{ assignment.subject.id }}" class="action-btn action-btn-success">
+                                            <i class="fas fa-check-circle"></i>
+                                            <span>Attendance</span>
+                                        </a>
+                                        <a href="{% url 'academic:create_assignment' %}?class={{ assignment.class_assigned.id }}&subject={{ assignment.subject.id }}" class="action-btn action-btn-info">
+                                            <i class="fas fa-plus"></i>
+                                            <span>Assignment</span>
+                                        </a>
+                                        <a href="{% url 'examination:exam_list' %}" class="action-btn action-btn-warning">
+                                            <i class="fas fa-clipboard-list"></i>
+                                            <span>Exams</span>
+                                        </a>
+                                    </div>
+                                </div>
+                                
+                                <!-- Subject Footer - Today's Session -->
+                                {% for session in todays_sessions %}
+                                    {% if session.teacher_assignment.class_assigned.id == assignment.class_assigned.id and session.teacher_assignment.subject.id == assignment.subject.id %}
+                                    <div class="card-footer session-footer border-0">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <small class="text-muted d-block mb-1">
+                                                    <i class="fas fa-clock me-1"></i>Today's Session
+                                                </small>
+                                                <small class="fw-bold text-dark">{{ session.start_time|time:"g:i A" }} - {{ session.end_time|time:"g:i A" }}</small>
+                                            </div>
+                                            <div>
+                                                {% if session.is_completed %}
+                                                    <span class="badge bg-success px-3 py-2">
+                                                        <i class="fas fa-check me-1"></i>Done
+                                                    </span>
+                                                {% else %}
+                                                    <a href="{% url 'attendance:mark_attendance_session' session.id %}" class="btn btn-sm btn-primary px-3">
+                                                        Mark Now
+                                                    </a>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    {% if not forloop.last %}
+                    <div class="section-divider"></div>
+                    {% endif %}
+                    {% endfor %}
+                    
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-chalkboard-teacher fa-4x text-muted mb-3 opacity-50"></i>
+                    <h6 class="text-muted mb-2">No Classes Assigned</h6>
+                    <p class="text-muted">Contact the administrator to get assigned to classes</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Parent Messages -->
+<div class="row">
+    <div class="col-12 mb-4">
+        <div class="card shadow">
+            <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                <h6 class="m-0"><i class="fas fa-envelope"></i> Messages from Parents</h6>
+                <a href="{% url 'accounts:message_inbox' %}" class="btn btn-sm btn-light">
+                    <i class="fas fa-inbox"></i> View All Messages
+                </a>
+            </div>
+            <div class="card-body">
+                {% if parent_messages %}
+                <div class="list-group list-group-flush">
+                    {% for message in parent_messages %}
+                    <a href="{% url 'accounts:message_detail' message.id %}" class="list-group-item list-group-item-action {% if not message.teacher_read %}bg-light border-start border-primary border-3{% endif %}">
+                        <div class="d-flex w-100 justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <div class="d-flex align-items-center mb-2">
+                                    {% if not message.teacher_read %}
+                                    <span class="badge bg-primary me-2">New</span>
+                                    {% endif %}
+                                    <h6 class="mb-0 fw-bold">{{ message.subject }}</h6>
+                                </div>
+                                <p class="mb-2 text-muted">
+                                    <i class="fas fa-user me-1"></i>
+                                    <strong>From:</strong> {{ message.sender.get_full_name|default:message.sender.username }}
+                                    {% if message.student %}
+                                    <span class="ms-2">
+                                        <i class="fas fa-child me-1"></i>
+                                        <strong>About:</strong> {{ message.student.user.get_full_name }}
+                                    </span>
+                                    {% endif %}
+                                </p>
+                                <p class="mb-1 text-truncate" style="max-width: 600px;">{{ message.message|truncatewords:20 }}</p>
+                            </div>
+                            <div class="text-end ms-3">
+                                <small class="text-muted d-block">
+                                    <i class="fas fa-clock me-1"></i>{{ message.created_at|timesince }} ago
+                                </small>
+                                {% if message.status == 'replied' %}
+                                <span class="badge bg-success mt-2">Replied</span>
+                                {% elif message.status == 'read' %}
+                                <span class="badge bg-secondary mt-2">Read</span>
+                                {% else %}
+                                <span class="badge bg-warning mt-2">Unread</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-envelope-open fa-4x text-muted mb-3"></i>
+                    <h6 class="text-muted">No Messages from Parents</h6>
+                    <p class="text-muted">You'll see messages from parents here when they contact you</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Attendance Overview -->
+<div class="row">
+    <div class="col-12 mb-4">
+        <div class="card shadow">
+            <div class="card-header bg-warning text-white">
+                <h6 class="m-0"><i class="fas fa-calendar-check"></i> Attendance Overview</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for stat in attendance_stats %}
+                    <div class="col-md-3 mb-3">
+                        <div class="card border-left-primary">
+                            <div class="card-body">
+                                <div class="text-center">
+                                    <h5 class="text-primary">{{ stat.attendance_rate }}%</h5>
+                                    <p class="text-muted mb-1">{{ stat.class_name }}</p>
+                                    <small class="text-muted">{{ stat.total_sessions }} sessions</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Students with Unpaid Fees -->
+{% if students_with_unpaid_fees %}
+<div class="row">
+    <div class="col-12 mb-4">
+        <div class="card shadow">
+            <div class="card-header bg-danger text-white">
+                <h6 class="m-0"><i class="fas fa-exclamation-triangle"></i> Students with Unpaid Fees</h6>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning" role="alert">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Note:</strong> The following students have outstanding fee payments. They cannot view their exam results until fees are paid.
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Student Name</th>
+                                <th>Student ID</th>
+                                <th>Class</th>
+                                <th>Unpaid Amount</th>
+                                <th>Fee Items</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in students_with_unpaid_fees %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-danger rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 35px; height: 35px;">
+                                            <i class="fas fa-user text-white"></i>
+                                        </div>
+                                        <strong>
+                                            {% if item.student.user.get_full_name %}
+                                                {{ item.student.user.get_full_name }}
+                                            {% else %}
+                                                {{ item.student.user.username }}
+                                            {% endif %}
+                                        </strong>
+                                    </div>
+                                </td>
+                                <td>{{ item.student.student_id }}</td>
+                                <td>{{ item.class.name }}</td>
+                                <td>
+                                    <span class="badge bg-danger fs-6">Rs. {{ item.total_unpaid|floatformat:2 }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-warning">{{ item.fee_count }} unpaid fee{{ item.fee_count|pluralize }}</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="mt-3">
+                    <small class="text-muted">
+                        <i class="fas fa-lightbulb me-1"></i>
+                        <strong>Tip:</strong> Inform parents about pending fees or direct students to the administration office for payment.
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="row">
+    <!-- Recent Activities -->
+    <div class="col-12 mb-4">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-gradient-info text-white border-0">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 fw-bold"><i class="fas fa-history me-2"></i>Recent Activities</h6>
+                    <small class="opacity-75">Latest teacher actions</small>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if recent_sessions %}
+                <div class="row">
+                    {% for session in recent_sessions %}
+                    <div class="col-lg-6 col-12 mb-3">
+                        <div class="activity-item p-3 border rounded-3 bg-light">
+                            <div class="d-flex align-items-center">
+                                <div class="activity-icon me-3">
+                                    <i class="fas fa-check-circle text-success fa-lg"></i>
+                                </div>
+                                <div class="activity-content flex-grow-1">
+                                    <div class="activity-title fw-medium">
+                                        {% if session.is_completed %}
+                                            Attendance Marked
+                                        {% else %}
+                                            Session Created
+                                        {% endif %}
+                                    </div>
+                                    <div class="activity-description text-muted small">
+                                        {{ session.teacher_assignment.subject.name }} - {{ session.teacher_assignment.class_assigned.name }}
+                                    </div>
+                                </div>
+                                <div class="activity-time">
+                                    <small class="text-muted">{{ session.date|timesince }} ago</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <div class="empty-state">
+                        <i class="fas fa-history fa-4x text-muted mb-3 opacity-50"></i>
+                        <h6 class="text-muted mb-2">No Recent Activities</h6>
+                        <p class="text-muted mb-4">Start by marking attendance or creating assignments to see your activity history</p>
+                        <div class="d-flex justify-content-center gap-2">
+                            <a href="{% url 'attendance:mark_attendance' %}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-check-circle me-1"></i>Mark Attendance
+                            </a>
+                            <a href="{% url 'academic:create_assignment' %}" class="btn btn-sm btn-outline-success">
+                                <i class="fas fa-plus me-1"></i>Create Assignment
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- My Assignments -->
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+                <h6 class="m-0"><i class="fas fa-tasks"></i> My Created Assignments</h6>
+                <a href="{% url 'academic:create_assignment' %}" class="btn btn-sm btn-light">
+                    <i class="fas fa-plus"></i> Create New Assignment
+                </a>
+            </div>
+            <div class="card-body">
+                {% if created_assignments %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Assignment Title</th>
+                                <th>Subject</th>
+                                <th>Class</th>
+                                <th>Due Date</th>
+                                <th>Submissions</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for assignment in created_assignments %}
+                            <tr>
+                                <td>
+                                    <strong>{{ assignment.title }}</strong><br>
+                                    <small class="text-muted">{{ assignment.assignment_type|title }}</small>
+                                </td>
+                                <td>{{ assignment.subject.name }}</td>
+                                <td>{{ assignment.class_assigned.name }}</td>
+                                <td>
+                                    <span class="{% if assignment.due_date < today %}text-danger{% else %}text-info{% endif %}">
+                                        {{ assignment.due_date|date:"M d, Y g:i A" }}
+                                    </span>
+                                    {% if assignment.due_date < today %}
+                                        <br><span class="badge bg-danger">Overdue</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge bg-primary">
+                                        {{ assignment.assignmentsubmission_set.count }} submissions
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if assignment.is_active %}
+                                        <span class="badge bg-success">Active</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Inactive</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="{% url 'academic:assignment_detail' assignment.id %}" class="btn btn-sm btn-outline-info" title="View Details">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{% url 'academic:edit_assignment' assignment.id %}" class="btn btn-sm btn-outline-warning" title="Edit Assignment">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="{% url 'academic:assignment_submissions' assignment.id %}" class="btn btn-sm btn-outline-success" title="View Submissions">
+                                            <i class="fas fa-file-alt"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-tasks fa-3x text-muted mb-3"></i>
+                    <h6 class="text-muted">No Assignments Created Yet</h6>
+                    <p class="text-muted">Create your first assignment to get started</p>
+                    <a href="{% url 'academic:create_assignment' %}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Create Assignment
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Subject Assignments (Teaching Schedule) - Grouped by Class -->
+        <div class="card shadow-sm border-0 mt-4">
+            <div class="card-header bg-gradient-info text-white border-0">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="m-0 fw-bold"><i class="fas fa-calendar-alt me-2"></i>My Teaching Schedule</h5>
+                    <span class="badge bg-white text-info">{{ teacher_assignments.count }} Subject{{ teacher_assignments.count|pluralize }}</span>
+                </div>
+            </div>
+            <div class="card-body p-4">
+                {% if teacher_assignments %}
+                    {% regroup teacher_assignments by class_assigned.name as schedule_grouped %}
+                    
+                    {% for class_group in schedule_grouped %}
+                    <!-- Class Schedule Section -->
+                    <div class="schedule-section mb-4">
+                        <div class="schedule-header">
+                            <div class="d-flex align-items-center justify-content-between mb-3">
+                                <div>
+                                    <h5 class="mb-1 text-info fw-bold">
+                                        <i class="fas fa-school me-2"></i>{{ class_group.grouper }}
+                                    </h5>
+                                    <p class="text-muted mb-0 small">
+                                        <i class="fas fa-book me-1"></i>{{ class_group.list|length }} Subject{{ class_group.list|length|pluralize }}
+                                        <span class="mx-2">•</span>
+                                        <i class="fas fa-users me-1"></i>
+                                        {% with first_class=class_group.list.0.class_assigned %}
+                                            {{ first_class.studentenrollment_set.count|default:0 }} Student{{ first_class.studentenrollment_set.count|pluralize }}
+                                        {% endwith %}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Subjects Table for this Class -->
+                        <div class="table-responsive">
+                            <table class="table table-hover table-bordered schedule-table">
+                                <thead>
+                                    <tr>
+                                        <th width="35%">Subject</th>
+                                        <th width="20%">Section</th>
+                                        <th width="20%">Students</th>
+                                        <th width="25%">Quick Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for assignment in class_group.list %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="subject-icon me-2">
+                                                    <i class="fas fa-book-open"></i>
+                                                </div>
+                                                <div>
+                                                    <strong class="d-block">{{ assignment.subject.name }}</strong>
+                                                    <small class="text-muted">{{ assignment.subject.code }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-warning text-dark px-3 py-2 fw-bold">
+                                                Section {{ assignment.class_assigned.section }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-primary px-3 py-2">
+                                                <i class="fas fa-users me-1"></i>
+                                                {{ assignment.class_assigned.studentenrollment_set.count|default:0 }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <a href="{% url 'attendance:mark_attendance' %}?class={{ assignment.class_assigned.id }}&subject={{ assignment.subject.id }}" 
+                                                   class="btn btn-sm btn-outline-success" 
+                                                   title="Mark Attendance">
+                                                    <i class="fas fa-check-circle"></i>
+                                                </a>
+                                                <a href="{% url 'academic:create_assignment' %}?class={{ assignment.class_assigned.id }}&subject={{ assignment.subject.id }}" 
+                                                   class="btn btn-sm btn-outline-primary" 
+                                                   title="Create Assignment">
+                                                    <i class="fas fa-plus"></i>
+                                                </a>
+                                                <a href="{% url 'academic:teacher_class_students' assignment.class_assigned.id %}" 
+                                                   class="btn btn-sm btn-outline-info" 
+                                                   title="View Students">
+                                                    <i class="fas fa-users"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    {% if not forloop.last %}
+                    <hr class="my-4">
+                    {% endif %}
+                    {% endfor %}
+                    
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-chalkboard-teacher fa-4x text-muted mb-3 opacity-50"></i>
+                    <h6 class="text-muted mb-2">No Subject Assignments</h6>
+                    <p class="text-muted">Contact admin to get assigned to subjects and classes</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endif %}
+
+<!-- Quick Actions - Premium Professional Design -->
+<div class="row mt-5">
+    <div class="col-12">
+        <div class="card shadow-lg border-0 quick-actions-premium">
+            <!-- Premium Header with Gradient -->
+            <div class="card-header quick-actions-header border-0">
+                <div class="header-content-wrapper">
+                    <div class="header-icon-badge">
+                        <i class="fas fa-bolt"></i>
+                        <div class="icon-pulse"></div>
+                    </div>
+                    <div class="header-text">
+                        <h4 class="header-title mb-1">Quick Actions</h4>
+                        <p class="header-subtitle mb-0">Frequently used teacher tools</p>
+                    </div>
+                </div>
+                <div class="header-decoration">
+                    <div class="decoration-circle circle-1"></div>
+                    <div class="decoration-circle circle-2"></div>
+                    <div class="decoration-circle circle-3"></div>
+                </div>
+            </div>
+            
+            <div class="card-body p-4">
+                <!-- Primary Actions Grid -->
+                <div class="actions-grid mb-4">
+                    <!-- Create Assignment -->
+                    <a href="{% url 'academic:create_assignment' %}" class="action-card action-primary">
+                        <div class="action-card-inner">
+                            <div class="action-icon-wrapper">
+                                <div class="action-icon">
+                                    <i class="fas fa-plus-circle"></i>
+                                </div>
+                                <div class="icon-bg-effect"></div>
+                            </div>
+                            <div class="action-content">
+                                <h6 class="action-title">Create Assignment</h6>
+                                <p class="action-description">Add new assignment</p>
+                            </div>
+                            <div class="action-arrow">
+                                <i class="fas fa-arrow-right"></i>
+                            </div>
+                        </div>
+                        <div class="action-shine"></div>
+                    </a>
+                    
+                    <!-- Mark Attendance -->
+                    <a href="{% url 'attendance:mark_attendance' %}" class="action-card action-success">
+                        <div class="action-card-inner">
+                            <div class="action-icon-wrapper">
+                                <div class="action-icon">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <div class="icon-bg-effect"></div>
+                            </div>
+                            <div class="action-content">
+                                <h6 class="action-title">Mark Attendance</h6>
+                                <p class="action-description">Record attendance</p>
+                            </div>
+                            <div class="action-arrow">
+                                <i class="fas fa-arrow-right"></i>
+                            </div>
+                        </div>
+                        <div class="action-shine"></div>
+                    </a>
+                    
+                    <!-- Create Exam -->
+                    <a href="{% url 'examination:create_exam' %}" class="action-card action-info">
+                        <div class="action-card-inner">
+                            <div class="action-icon-wrapper">
+                                <div class="action-icon">
+                                    <i class="fas fa-clipboard-list"></i>
+                                </div>
+                                <div class="icon-bg-effect"></div>
+                            </div>
+                            <div class="action-content">
+                                <h6 class="action-title">Create Exam</h6>
+                                <p class="action-description">Schedule exam</p>
+                            </div>
+                            <div class="action-arrow">
+                                <i class="fas fa-arrow-right"></i>
+                            </div>
+                        </div>
+                        <div class="action-shine"></div>
+                    </a>
+                    
+                    <!-- My Assignments -->
+                    <a href="{% url 'academic:assignment_list' %}" class="action-card action-purple">
+                        <div class="action-card-inner">
+                            <div class="action-icon-wrapper">
+                                <div class="action-icon">
+                                    <i class="fas fa-tasks"></i>
+                                </div>
+                                <div class="icon-bg-effect"></div>
+                            </div>
+                            <div class="action-content">
+                                <h6 class="action-title">My Assignments</h6>
+                                <p class="action-description">Manage assignments</p>
+                            </div>
+                            <div class="action-arrow">
+                                <i class="fas fa-arrow-right"></i>
+                            </div>
+                        </div>
+                        <div class="action-shine"></div>
+                    </a>
+                    
+                    <!-- Enter Grades -->
+                    <a href="{% url 'examination:result_list' %}" class="action-card action-warning">
+                        <div class="action-card-inner">
+                            <div class="action-icon-wrapper">
+                                <div class="action-icon">
+                                    <i class="fas fa-edit"></i>
+                                </div>
+                                <div class="icon-bg-effect"></div>
+                            </div>
+                            <div class="action-content">
+                                <h6 class="action-title">Enter Grades</h6>
+                                <p class="action-description">Record results</p>
+                            </div>
+                            <div class="action-arrow">
+                                <i class="fas fa-arrow-right"></i>
+                            </div>
+                        </div>
+                        <div class="action-shine"></div>
+                    </a>
+                    
+                    <!-- View Reports -->
+                    <a href="{% url 'attendance:attendance_reports' %}" class="action-card action-dark">
+                        <div class="action-card-inner">
+                            <div class="action-icon-wrapper">
+                                <div class="action-icon">
+                                    <i class="fas fa-chart-bar"></i>
+                                </div>
+                                <div class="icon-bg-effect"></div>
+                            </div>
+                            <div class="action-content">
+                                <h6 class="action-title">View Reports</h6>
+                                <p class="action-description">Analytics & reports</p>
+                            </div>
+                            <div class="action-arrow">
+                                <i class="fas fa-arrow-right"></i>
+                            </div>
+                        </div>
+                        <div class="action-shine"></div>
+                    </a>
+                </div>
+                
+                <!-- Secondary Actions Grid -->
+                <div class="actions-grid-secondary">
+                    <!-- Send Notification -->
+                    <a href="{% url 'notifications:create_notification' %}" class="action-card-secondary action-secondary-purple">
+                        <div class="action-icon-small">
+                            <i class="fas fa-bell"></i>
+                        </div>
+                        <div class="action-text">
+                            <span class="action-title-small">Send Notification</span>
+                            <span class="action-subtitle-small">Notify students</span>
+                        </div>
+                        <i class="fas fa-chevron-right action-chevron"></i>
+                    </a>
+                    
+                    <!-- Parent Messages -->
+                    <a href="{% url 'accounts:message_inbox' %}" class="action-card-secondary action-secondary-info">
+                        <div class="action-icon-small">
+                            <i class="fas fa-envelope"></i>
+                        </div>
+                        <div class="action-text">
+                            <span class="action-title-small">Parent Messages</span>
+                            <span class="action-subtitle-small">View messages</span>
+                        </div>
+                        <i class="fas fa-chevron-right action-chevron"></i>
+                    </a>
+                    
+                    <!-- My Profile -->
+                    <a href="{% url 'accounts:profile' %}" class="action-card-secondary action-secondary-teal">
+                        <div class="action-icon-small">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="action-text">
+                            <span class="action-title-small">My Profile</span>
+                            <span class="action-subtitle-small">Update profile</span>
+                        </div>
+                        <i class="fas fa-chevron-right action-chevron"></i>
+                    </a>
+                    
+                    <!-- All Notifications -->
+                    <a href="{% url 'notifications:notification_list' %}" class="action-card-secondary action-secondary-indigo">
+                        <div class="action-icon-small">
+                            <i class="fas fa-inbox"></i>
+                        </div>
+                        <div class="action-text">
+                            <span class="action-title-small">All Notifications</span>
+                            <span class="action-subtitle-small">View messages</span>
+                        </div>
+                        <i class="fas fa-chevron-right action-chevron"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js for Interactive Charts -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Chart Data as JSON -->
+{{ chart_data_json|safe }}
+
+<!-- Chart Initialization -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded, initializing charts...');
+    
+    // Check if chart data exists
+    if (typeof window.chartData === 'undefined') {
+        console.log('No chart data available');
+        return;
+    }
+    
+    // Assignment Submissions Chart
+    const assignmentCtx = document.getElementById('assignmentChart');
+    if (assignmentCtx && window.chartData.assignmentStats && window.chartData.assignmentStats.length > 0) {
+        console.log('Creating assignment chart...');
+        
+        const labels = window.chartData.assignmentStats.map(stat => stat.className);
+        const submissionRates = window.chartData.assignmentStats.map(stat => stat.submissionRate);
+        const notSubmittedRates = submissionRates.map(rate => 100 - rate);
+        
+        new Chart(assignmentCtx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Submitted',
+                    data: submissionRates,
+                    backgroundColor: '#3B82F6',
+                    borderRadius: 6,
+                }, {
+                    label: 'Not Submitted',
+                    data: notSubmittedRates,
+                    backgroundColor: '#E5E7EB',
+                    borderRadius: 6,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                },
+                scales: {
+                    x: {
+                        stacked: true
+                    },
+                    y: {
+                        stacked: true,
+                        beginAtZero: true,
+                        max: 100
+                    }
+                }
+            }
+        });
+    }
+
+    // Student Passing Rate Chart
+    const passingCtx = document.getElementById('passingChart');
+    if (passingCtx && window.chartData.passingStats && window.chartData.passingStats.length > 0) {
+        console.log('Creating passing chart...');
+        
+        const labels = window.chartData.passingStats.map(stat => stat.className);
+        const passingRates = window.chartData.passingStats.map(stat => stat.passingRate);
+        const failingRates = passingRates.map(rate => 100 - rate);
+        
+        new Chart(passingCtx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Passed',
+                    data: passingRates,
+                    backgroundColor: '#10B981',
+                    borderRadius: 6,
+                }, {
+                    label: 'Failed',
+                    data: failingRates,
+                    backgroundColor: '#EF4444',
+                    borderRadius: 6,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                },
+                scales: {
+                    x: {
+                        stacked: true
+                    },
+                    y: {
+                        stacked: true,
+                        beginAtZero: true,
+                        max: 100
+                    }
+                }
+            }
+        });
+    }
+
+    // Syllabus Progress Chart
+    const syllabusCtx = document.getElementById('syllabusChart');
+    if (syllabusCtx && window.chartData.syllabusProgress && window.chartData.syllabusProgress.length > 0) {
+        console.log('Creating syllabus chart...');
+        
+        const progressData = window.chartData.syllabusProgress.map(progress => progress.progressPercentage);
+        const avgProgress = progressData.length > 0 ? 
+            progressData.reduce((a, b) => a + b, 0) / progressData.length : 0;
+        
+        new Chart(syllabusCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Completed', 'Remaining'],
+                datasets: [{
+                    data: [avgProgress, 100 - avgProgress],
+                    backgroundColor: ['#EC4899', '#3B82F6'],
+                    borderWidth: 0,
+                    cutout: '65%'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    }
+
+    console.log('All charts initialized successfully');
+});
+
+// Notification Bell Functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const notificationBadge = document.getElementById('notificationBadge');
+    const notificationList = document.getElementById('notificationList');
+    const notificationDropdown = document.getElementById('notificationDropdown');
+    
+    // Function to update notification count
+    function updateNotificationCount() {
+        fetch('{% url "notifications:get_unread_count" %}')
+            .then(response => response.json())
+            .then(data => {
+                const count = data.unread_count;
+                if (count > 0) {
+                    notificationBadge.textContent = count > 99 ? '99+' : count;
+                    notificationBadge.style.display = 'block';
+                } else {
+                    notificationBadge.style.display = 'none';
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching notification count:', error);
+            });
+    }
+    
+    // Function to load recent notifications
+    function loadRecentNotifications() {
+        fetch('{% url "notifications:get_recent_notifications" %}')
+            .then(response => response.json())
+            .then(data => {
+                const notifications = data.notifications;
+                
+                if (notifications.length === 0) {
+                    notificationList.innerHTML = `
+                        <li class="dropdown-item text-center text-muted py-3">
+                            <i class="fas fa-bell-slash"></i><br>
+                            No notifications
+                        </li>
+                    `;
+                } else {
+                    notificationList.innerHTML = notifications.map(notification => {
+                        const priorityColor = {
+                            'urgent': 'danger',
+                            'high': 'warning', 
+                            'medium': 'info',
+                            'low': 'secondary'
+                        }[notification.priority] || 'secondary';
+                        
+                        const typeIcon = {
+                            'academic': 'graduation-cap',
+                            'attendance': 'calendar-check',
+                            'exam': 'clipboard-list',
+                            'fee': 'dollar-sign',
+                            'event': 'calendar-alt',
+                            'general': 'bell'
+                        }[notification.notification_type] || 'bell';
+                        
+                        return `
+                            <li class="dropdown-item ${notification.is_read ? '' : 'bg-light'}" style="white-space: normal;">
+                                <div class="d-flex align-items-start">
+                                    <div class="me-2">
+                                        <i class="fas fa-${typeIcon} text-${priorityColor}"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-1 fw-bold" style="font-size: 0.9rem;">${notification.title}</h6>
+                                        <p class="mb-1 text-muted" style="font-size: 0.8rem;">${notification.message}</p>
+                                        <small class="text-muted">
+                                            <i class="fas fa-user me-1"></i>${notification.sender} • 
+                                            <i class="fas fa-clock me-1"></i>${notification.created_at}
+                                        </small>
+                                    </div>
+                                    ${!notification.is_read ? '<div class="ms-2"><span class="badge bg-primary rounded-pill" style="width: 8px; height: 8px;"></span></div>' : ''}
+                                </div>
+                            </li>
+                        `;
+                    }).join('');
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching notifications:', error);
+                notificationList.innerHTML = `
+                    <li class="dropdown-item text-center text-danger py-3">
+                        <i class="fas fa-exclamation-triangle"></i><br>
+                        Error loading notifications
+                    </li>
+                `;
+            });
+    }
+    
+    // Load notifications when dropdown is opened
+    notificationDropdown.addEventListener('click', function() {
+        loadRecentNotifications();
+    });
+    
+    // Initial load
+    updateNotificationCount();
+    
+    // Update every 30 seconds
+    setInterval(updateNotificationCount, 30000);
+});
+</script>
+
+<!-- Notification Bell Styles -->
+<style>
+.notification-bell-container {
+    position: relative;
+}
+
+.notification-bell-btn {
+    border: 2px solid #dee2e6;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.notification-bell-btn:hover {
+    background-color: #f8f9fa;
+    border-color: #6c757d;
+    transform: scale(1.05);
+}
+
+.notification-bell-btn:focus {
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.notification-dropdown {
+    border: none;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    border-radius: 0.5rem;
+}
+
+.notification-dropdown .dropdown-item {
+    border-bottom: 1px solid #f8f9fa;
+    padding: 0.75rem 1rem;
+    transition: background-color 0.2s ease;
+}
+
+.notification-dropdown .dropdown-item:last-child {
+    border-bottom: none;
+}
+
+.notification-dropdown .dropdown-item:hover {
+    background-color: #f8f9fa;
+}
+
+.notification-dropdown .dropdown-header {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    padding: 0.75rem 1rem;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.notification-dropdown .bg-light {
+    background-color: #e3f2fd !important;
+}
+
+@media (max-width: 768px) {
+    .notification-dropdown {
+        width: 300px !important;
+    }
+    
+    .notification-bell-btn {
+        width: 45px;
+        height: 45px;
+    }
+}
+
+/* ============================================
+   PREMIUM QUICK ACTIONS SECTION
+   ============================================ */
+
+.quick-actions-premium {
+    border-radius: 20px;
+    overflow: hidden;
+    background: #ffffff;
+}
+
+/* Premium Header Styles */
+.quick-actions-header {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 50%, #fcd34d 100%);
+    padding: 2rem 2.5rem;
+    position: relative;
+    overflow: hidden;
+    border-bottom: 3px solid #f59e0b;
+}
+
+.header-content-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    position: relative;
+    z-index: 2;
+}
+
+.header-icon-badge {
+    width: 70px;
+    height: 70px;
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    box-shadow: 0 8px 32px rgba(245, 158, 11, 0.4);
+    border: 2px solid rgba(255, 255, 255, 0.5);
+}
+
+.header-icon-badge i {
+    font-size: 2rem;
+    color: #fff;
+    position: relative;
+    z-index: 2;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+.icon-pulse {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 20px;
+    background: rgba(245, 158, 11, 0.4);
+    animation: pulse-animation 2s infinite;
+}
+
+@keyframes pulse-animation {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.1);
+        opacity: 0.5;
+    }
+}
+
+.header-text .header-title {
+    color: #1a1a1a;
+    font-size: 1.75rem;
+    font-weight: 900;
+    margin: 0;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    letter-spacing: -0.5px;
+}
+
+.header-text .header-subtitle {
+    color: #4b5563;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.header-decoration {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    z-index: 1;
+}
+
+.decoration-circle {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(245, 158, 11, 0.15);
+}
+
+.circle-1 {
+    width: 200px;
+    height: 200px;
+    top: -100px;
+    right: -50px;
+}
+
+.circle-2 {
+    width: 150px;
+    height: 150px;
+    top: 50%;
+    right: 10%;
+    animation: float 6s ease-in-out infinite;
+}
+
+.circle-3 {
+    width: 100px;
+    height: 100px;
+    bottom: -50px;
+    right: 30%;
+    animation: float 8s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-20px);
+    }
+}
+
+/* Primary Actions Grid */
+.actions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+
+.action-card {
+    position: relative;
+    display: block;
+    text-decoration: none;
+    background: #fff;
+    border-radius: 16px;
+    padding: 1.75rem;
+    border: 2px solid #f0f0f0;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    overflow: hidden;
+}
+
+.action-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.action-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+    text-decoration: none;
+}
+
+.action-card:hover::before {
+    opacity: 1;
+}
+
+.action-card-inner {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    position: relative;
+    z-index: 2;
+}
+
+.action-icon-wrapper {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.action-icon {
+    width: 65px;
+    height: 65px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.75rem;
+    color: #fff;
+    position: relative;
+    z-index: 2;
+    transition: transform 0.3s ease;
+}
+
+.action-card:hover .action-icon {
+    transform: scale(1.1) rotate(5deg);
+}
+
+.icon-bg-effect {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 16px;
+    opacity: 0.2;
+    filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+.action-card:hover .icon-bg-effect {
+    opacity: 0.4;
+    transform: scale(1.2);
+}
+
+.action-content {
+    flex: 1;
+}
+
+.action-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #2d3748;
+    margin: 0 0 0.25rem 0;
+    transition: color 0.3s ease;
+}
+
+.action-description {
+    font-size: 0.875rem;
+    color: #718096;
+    margin: 0;
+}
+
+.action-arrow {
+    font-size: 1.25rem;
+    color: #cbd5e0;
+    transition: all 0.3s ease;
+}
+
+.action-card:hover .action-arrow {
+    color: #4a5568;
+    transform: translateX(5px);
+}
+
+.action-shine {
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(45deg, transparent, rgba(255,255,255,0.3), transparent);
+    transform: translateX(-100%);
+    transition: transform 0.6s ease;
+}
+
+.action-card:hover .action-shine {
+    transform: translateX(100%);
+}
+
+/* Color Variants for Primary Actions */
+.action-primary .action-icon { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+.action-primary .icon-bg-effect { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+.action-primary:hover { border-color: #667eea; }
+
+.action-success .action-icon { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); }
+.action-success .icon-bg-effect { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); }
+.action-success:hover { border-color: #11998e; }
+
+.action-info .action-icon { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+.action-info .icon-bg-effect { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+.action-info:hover { border-color: #4facfe; }
+
+.action-purple .action-icon { background: linear-gradient(135deg, #a8c0ff 0%, #3f2b96 100%); }
+.action-purple .icon-bg-effect { background: linear-gradient(135deg, #a8c0ff 0%, #3f2b96 100%); }
+.action-purple:hover { border-color: #a8c0ff; }
+
+.action-warning .action-icon { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+.action-warning .icon-bg-effect { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+.action-warning:hover { border-color: #fa709a; }
+
+.action-dark .action-icon { background: linear-gradient(135deg, #434343 0%, #000000 100%); }
+.action-dark .icon-bg-effect { background: linear-gradient(135deg, #434343 0%, #000000 100%); }
+.action-dark:hover { border-color: #434343; }
+
+/* Secondary Actions Grid */
+.actions-grid-secondary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+.action-card-secondary {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.25rem 1.5rem;
+    background: #f8f9fa;
+    border-radius: 12px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    border: 1px solid transparent;
+}
+
+.action-card-secondary:hover {
+    background: #fff;
+    transform: translateX(5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+    text-decoration: none;
+}
+
+.action-icon-small {
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    color: #fff;
+    flex-shrink: 0;
+    transition: transform 0.3s ease;
+}
+
+.action-card-secondary:hover .action-icon-small {
+    transform: scale(1.1);
+}
+
+.action-text {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.action-title-small {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #2d3748;
+    display: block;
+    margin-bottom: 0.15rem;
+}
+
+.action-subtitle-small {
+    font-size: 0.8rem;
+    color: #718096;
+    display: block;
+}
+
+.action-chevron {
+    font-size: 1rem;
+    color: #cbd5e0;
+    transition: all 0.3s ease;
+}
+
+.action-card-secondary:hover .action-chevron {
+    color: #4a5568;
+    transform: translateX(3px);
+}
+
+/* Color Variants for Secondary Actions */
+.action-secondary-purple .action-icon-small { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+.action-secondary-purple:hover { border-color: #667eea; }
+
+.action-secondary-info .action-icon-small { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+.action-secondary-info:hover { border-color: #4facfe; }
+
+.action-secondary-teal .action-icon-small { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); }
+.action-secondary-teal:hover { border-color: #11998e; }
+
+.action-secondary-indigo .action-icon-small { background: linear-gradient(135deg, #a8c0ff 0%, #3f2b96 100%); }
+.action-secondary-indigo:hover { border-color: #a8c0ff; }
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .actions-grid {
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 1.25rem;
+    }
+    
+    .action-card {
+        padding: 1.5rem;
+    }
+    
+    .action-icon {
+        width: 55px;
+        height: 55px;
+        font-size: 1.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .quick-actions-header {
+        padding: 1.5rem;
+    }
+    
+    .header-icon-badge {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .header-icon-badge i {
+        font-size: 1.5rem;
+    }
+    
+    .header-text .header-title {
+        font-size: 1.5rem;
+    }
+    
+    .header-text .header-subtitle {
+        font-size: 0.9rem;
+    }
+    
+    .actions-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .actions-grid-secondary {
+        grid-template-columns: 1fr;
+    }
+    
+    .action-card {
+        padding: 1.25rem;
+    }
+    
+    .action-icon {
+        width: 50px;
+        height: 50px;
+        font-size: 1.35rem;
+    }
+    
+    .action-title {
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .header-content-wrapper {
+        gap: 1rem;
+    }
+    
+    .header-icon-badge {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .header-icon-badge i {
+        font-size: 1.25rem;
+    }
+    
+    .header-text .header-title {
+        font-size: 1.25rem;
+    }
+    
+    .header-text .header-subtitle {
+        font-size: 0.85rem;
+    }
+    
+    .action-card-inner {
+        gap: 1rem;
+    }
+    
+    .action-icon {
+        width: 45px;
+        height: 45px;
+        font-size: 1.25rem;
+    }
+    
+    .action-title {
+        font-size: 0.95rem;
+    }
+    
+    .action-description {
+        font-size: 0.8rem;
+    }
+    
+    .action-card-secondary {
+        padding: 1rem;
+    }
+    
+    .action-icon-small {
+        width: 45px;
+        height: 45px;
+        font-size: 1.1rem;
+    }
+}
+
+/* Recent Activities Styles */
+.activity-item {
+    transition: all 0.3s ease;
+    border: 1px solid #e9ecef !important;
+}
+
+.activity-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    border-color: #dee2e6 !important;
+}
+
+.activity-icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(40, 167, 69, 0.1);
+    border-radius: 50%;
+}
+
+.activity-title {
+    color: #2c3e50;
+    font-size: 0.9rem;
+}
+
+.activity-description {
+    font-size: 0.8rem;
+    line-height: 1.3;
+}
+
+.empty-state {
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+/* ============================================
+   PROFESSIONAL TEACHER DASHBOARD ENHANCEMENTS
+   ============================================ */
+
+/* Premium Teacher Dashboard Header */
+.teacher-dashboard-header-premium {
+    background: linear-gradient(135deg, #1e293b 0%, #334155 30%, #475569 70%, #64748b 100%);
+    border-radius: 24px;
+    padding: 2.5rem 2rem;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 25px 70px rgba(30, 41, 59, 0.5), 0 10px 30px rgba(51, 65, 85, 0.4);
+    margin-bottom: 2rem;
+    animation: gradientShift 15s ease infinite;
+    background-size: 200% 200%;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+@keyframes gradientShift {
+    0%, 100% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+}
+
+/* Alternative professional gradients - uncomment to use */
+/* Option 1: Navy to Indigo
+background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+*/
+/* Option 2: Deep Blue to Purple
+background: linear-gradient(135deg, #1a2a6c 0%, #b21f1f 50%, #fdbb2d 100%);
+*/
+/* Option 3: Professional Teal
+background: linear-gradient(135deg, #134e5e 0%, #71b280 100%);
+*/
+
+.header-bg-shape {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(20px);
+    box-shadow: inset 0 0 40px rgba(255, 255, 255, 0.1);
+    display: none; /* Hidden - removed glowing circles */
+}
+
+.header-bg-shape.shape-1 {
+    width: 450px;
+    height: 450px;
+    top: -225px;
+    right: -180px;
+    animation: float 10s ease-in-out infinite;
+    background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
+}
+
+.header-bg-shape.shape-2 {
+    width: 300px;
+    height: 300px;
+    bottom: -150px;
+    left: 3%;
+    animation: float 12s ease-in-out infinite reverse;
+    background: radial-gradient(circle, rgba(255,255,255,0.12) 0%, transparent 70%);
+}
+
+.header-bg-shape.shape-3 {
+    width: 200px;
+    height: 200px;
+    top: 35%;
+    right: 28%;
+    animation: float 14s ease-in-out infinite;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0) translateX(0) scale(1);
+    }
+    33% {
+        transform: translateY(-25px) translateX(15px) scale(1.05);
+    }
+    66% {
+        transform: translateY(-15px) translateX(-10px) scale(0.98);
+    }
+}
+
+.header-bg-pattern {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: 
+        radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.05) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.05) 0%, transparent 50%),
+        radial-gradient(circle at 40% 20%, rgba(255, 255, 255, 0.03) 0%, transparent 50%);
+    pointer-events: none;
+    animation: patternMove 20s ease infinite;
+    display: none; /* Hidden - removed background pattern */
+}
+
+@keyframes patternMove {
+    0%, 100% {
+        opacity: 0.5;
+    }
+    50% {
+        opacity: 0.8;
+    }
+}
+
+.header-content-premium {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+}
+
+.header-left-premium {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    flex: 1;
+}
+
+.header-avatar-section {
+    flex-shrink: 0;
+}
+
+.avatar-wrapper {
+    position: relative;
+    width: 85px;
+    height: 85px;
+}
+
+.avatar-ring {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 3px solid rgba(255, 255, 255, 0.4);
+    animation: pulse-ring 3s infinite;
+}
+
+@keyframes pulse-ring {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.08);
+        opacity: 0.6;
+    }
+}
+
+.avatar-icon {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.15) 100%);
+    backdrop-filter: blur(15px);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    color: white;
+    border: 3px solid rgba(255, 255, 255, 0.6);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.avatar-status {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    width: 20px;
+    height: 20px;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    border-radius: 50%;
+    border: 3px solid white;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.5);
+    animation: pulse-status 2s infinite;
+}
+
+@keyframes pulse-status {
+    0%, 100% {
+        box-shadow: 0 2px 8px rgba(16, 185, 129, 0.5);
+    }
+    50% {
+        box-shadow: 0 2px 16px rgba(16, 185, 129, 0.8);
+    }
+}
+
+.header-text-premium {
+    flex: 1;
+}
+
+.greeting-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.15) 100%);
+    backdrop-filter: blur(15px);
+    padding: 0.6rem 1.4rem;
+    border-radius: 30px;
+    color: white;
+    font-size: 0.95rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+    border: 1.5px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.greeting-badge i {
+    font-size: 1.2rem;
+    color: #fbbf24;
+    filter: drop-shadow(0 2px 6px rgba(251, 191, 36, 0.6));
+    animation: sunPulse 3s ease-in-out infinite;
+}
+
+@keyframes sunPulse {
+    0%, 100% {
+        transform: scale(1);
+        filter: drop-shadow(0 2px 6px rgba(251, 191, 36, 0.6));
+    }
+    50% {
+        transform: scale(1.1);
+        filter: drop-shadow(0 4px 12px rgba(251, 191, 36, 0.9));
+    }
+}
+
+.header-title-premium {
+    font-size: 2.75rem;
+    font-weight: 900;
+    color: white;
+    margin: 0 0 0.5rem 0;
+    text-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.3);
+    letter-spacing: -0.5px;
+    line-height: 1.2;
+    background: linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.header-subtitle-premium {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin: 0;
+    font-size: 1rem;
+}
+
+.role-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.2) 100%);
+    backdrop-filter: blur(15px);
+    padding: 0.6rem 1.2rem;
+    border-radius: 25px;
+    color: white;
+    font-weight: 700;
+    border: 1.5px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    font-size: 0.95rem;
+}
+
+.role-badge i {
+    font-size: 1.1rem;
+    filter: drop-shadow(0 2px 4px rgba(255, 255, 255, 0.3));
+}
+
+.divider {
+    color: rgba(255, 255, 255, 0.6);
+    font-weight: 300;
+    font-size: 1.2rem;
+}
+
+.date-info {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    color: white;
+    font-weight: 700;
+    background: linear-gradient(135deg, #f59e0b 0%, #f97316 50%, #ea580c 100%);
+    padding: 0.6rem 1.3rem;
+    border-radius: 25px;
+    backdrop-filter: blur(10px);
+    border: 1.5px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 6px 18px rgba(245, 158, 11, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    font-size: 0.95rem;
+}
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 6px 20px rgba(255, 71, 87, 0.4), inset 0 1px 3px rgba(255, 255, 255, 0.3);
+    font-size: 1.05rem;
+    transition: all 0.3s ease;
+    animation: dateGlow 3s ease-in-out infinite;
+}
+
+@keyframes dateGlow {
+    0%, 100% {
+        box-shadow: 0 6px 20px rgba(255, 71, 87, 0.4), inset 0 1px 3px rgba(255, 255, 255, 0.3);
+    }
+    50% {
+        box-shadow: 0 8px 30px rgba(255, 71, 87, 0.6), inset 0 1px 5px rgba(255, 255, 255, 0.4);
+    }
+}
+
+.date-info:hover {
+    transform: translateY(-2px) scale(1.03);
+    box-shadow: 0 10px 35px rgba(255, 71, 87, 0.5), inset 0 2px 5px rgba(255, 255, 255, 0.4);
+}
+
+.date-info i {
+    font-size: 1.1rem;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+.header-right-premium {
+    display: flex;
+    align-items: center;
+}
+
+.quick-action-btn {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.1) 100%);
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(255, 255, 255, 0.35);
+    color: white;
+    font-size: 1.4rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+.quick-action-btn:hover {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.2) 100%);
+    transform: scale(1.08);
+    border-color: rgba(255, 255, 255, 0.5);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+}
+
+.quick-action-btn i {
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+/* Responsive Header */
+@media (max-width: 991px) {
+    .teacher-dashboard-header-premium {
+        padding: 2rem 1.5rem;
+        border-radius: 20px;
+    }
+    
+    .header-title-premium {
+        font-size: 2.25rem;
+    }
+    
+    .avatar-wrapper {
+        width: 75px;
+        height: 75px;
+    }
+    
+    .avatar-icon {
+        font-size: 2.2rem;
+    }
+}
+
+@media (max-width: 767px) {
+    .teacher-dashboard-header-premium {
+        padding: 1.75rem 1.25rem;
+        border-radius: 18px;
+    }
+    
+    .header-content-premium {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1.25rem;
+    }
+    
+    .header-left-premium {
+        width: 100%;
+    }
+    
+    .header-title-premium {
+        font-size: 1.85rem;
+    }
+    
+    .header-subtitle-premium {
+        font-size: 0.9rem;
+    }
+    
+    .avatar-wrapper {
+        width: 65px;
+        height: 65px;
+    }
+    
+    .avatar-icon {
+        font-size: 1.9rem;
+    }
+    
+    .greeting-badge {
+        font-size: 0.85rem;
+        padding: 0.4rem 1rem;
+    }
+    
+    .role-badge {
+        font-size: 0.85rem;
+        padding: 0.4rem 0.85rem;
+    }
+    
+    .header-right-premium {
+        width: 100%;
+        justify-content: flex-end;
+    }
+    
+    .quick-action-btn {
+        width: 48px;
+        height: 48px;
+        font-size: 1.2rem;
+    }
+}
+
+@media (max-width: 575px) {
+    .teacher-dashboard-header-premium {
+        padding: 1.5rem 1rem;
+        border-radius: 16px;
+    }
+    
+    .header-title-premium {
+        font-size: 1.6rem;
+    }
+    
+    .header-subtitle-premium {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .divider {
+        display: none;
+    }
+    
+    .avatar-wrapper {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .avatar-icon {
+        font-size: 1.75rem;
+    }
+}
+
+/* Modern Dashboard Header */
+.dashboard-title {
+    font-size: 2.25rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 0.5rem;
+}
+
+.dashboard-subtitle {
+    font-size: 1.1rem;
+    color: #6c757d;
+    font-weight: 500;
+}
+
+/* Enhanced Card Styling */
+.card {
+    border: none;
+    border-radius: 15px;
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15) !important;
+}
+
+.card-header {
+    border: none;
+    border-radius: 15px 15px 0 0 !important;
+    padding: 1.25rem 1.5rem;
+    font-weight: 600;
+}
+
+/* Gradient Headers */
+.bg-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+}
+
+.bg-success {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%) !important;
+}
+
+.bg-info {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%) !important;
+}
+
+.bg-warning {
+    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%) !important;
+}
+
+.bg-danger {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%) !important;
+}
+
+.bg-secondary {
+    background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%) !important;
+}
+
+/* Professional Stats Cards */
+.bg-opacity-10 {
+    position: relative;
+    overflow: hidden;
+}
+
+.bg-opacity-10::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    animation: shimmer 3s infinite;
+}
+
+@keyframes shimmer {
+    0%, 100% { transform: rotate(0deg); }
+    50% { transform: rotate(180deg); }
+}
+
+/* Enhanced Table Styling */
+.table {
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.table thead th {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border: none;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+    padding: 1rem;
+}
+
+.table tbody tr {
+    transition: all 0.2s ease;
+}
+
+.table tbody tr:hover {
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    transform: scale(1.01);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+/* Professional Buttons */
+.btn {
+    border-radius: 10px;
+    padding: 0.625rem 1.25rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    border: none;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+}
+
+.btn-info {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.btn-warning {
+    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+    color: white;
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+}
+
+/* Badge Enhancements */
+.badge {
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 0.85rem;
+}
+
+/* List Group Modern Style */
+.list-group-item {
+    border: none;
+    border-radius: 10px !important;
+    margin-bottom: 0.5rem;
+    transition: all 0.3s ease;
+    background: #f8f9fa;
+}
+
+.list-group-item:hover {
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    transform: translateX(5px);
+    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+}
+
+/* Progress Bar Enhancement */
+.progress {
+    height: 8px;
+    border-radius: 10px;
+    background: #e9ecef;
+    overflow: hidden;
+}
+
+.progress-bar {
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    border-radius: 10px;
+    transition: width 0.6s ease;
+}
+
+/* Notification Bell Enhancement */
+.notification-bell-premium-link {
+    display: inline-block;
+    text-decoration: none;
+    cursor: pointer !important;
+    position: relative;
+    z-index: 1000 !important;
+    pointer-events: auto !important;
+}
+
+.notification-bell-premium {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    transition: all 0.3s ease;
+    cursor: pointer !important;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    pointer-events: auto !important;
+    z-index: 1000 !important;
+}
+
+.notification-bell-premium-link:hover .notification-bell-premium {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.4);
+    transform: scale(1.1);
+}
+
+.notification-bell-premium i {
+    color: white;
+    font-size: 1.3rem;
+    z-index: 2;
+    pointer-events: none;
+}
+
+.notification-pulse {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    animation: pulse-notification 2s infinite;
+    pointer-events: none !important;
+}
+
+@keyframes pulse-notification {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.15);
+        opacity: 0.5;
+    }
+}
+
+.notification-badge-premium {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #ff4757;
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.2rem 0.4rem;
+    border-radius: 10px;
+    min-width: 20px;
+    text-align: center;
+    z-index: 3;
+    box-shadow: 0 2px 8px rgba(255, 71, 87, 0.4);
+    pointer-events: none !important;
+}
+
+.header-actions {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    position: relative;
+    z-index: 100;
+}
+
+.header-bg-shape,
+.header-bg-pattern {
+    pointer-events: none !important;
+    z-index: 0 !important;
+}
+
+.header-content-premium {
+    position: relative;
+    z-index: 10;
+}
+
+.notification-bell-btn {
+    border-radius: 50%;
+    width: 45px;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    border: 2px solid #e9ecef;
+}
+
+.notification-bell-btn:hover {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-color: #667eea;
+    transform: scale(1.1);
+}
+
+/* Chart Card Enhancement */
+.chart-card {
+    position: relative;
+    overflow: hidden;
+}
+
+.chart-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 50%, #667eea 100%);
+    background-size: 200% 100%;
+    animation: gradientShift 3s ease infinite;
+}
+
+@keyframes gradientShift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+
+/* Empty State Styling */
+.empty-state {
+    padding: 3rem 2rem;
+    text-align: center;
+}
+
+.empty-state i {
+    opacity: 0.3;
+    margin-bottom: 1.5rem;
+}
+
+.empty-state h6 {
+    color: #6c757d;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.empty-state p {
+    color: #adb5bd;
+    font-size: 0.95rem;
+}
+
+/* Activity Item Enhancement */
+.activity-item {
+    transition: all 0.3s ease;
+    border-left: 4px solid transparent;
+}
+
+.activity-item:hover {
+    border-left-color: #667eea;
+    background: linear-gradient(90deg, rgba(102, 126, 234, 0.05) 0%, transparent 100%) !important;
+}
+
+/* Icon Enhancements */
+.rounded-circle {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+/* Smooth Animations */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.card, .alert {
+    animation: fadeInUp 0.5s ease-out;
+}
+
+/* Professional Shadow System */
+.shadow-sm {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important;
+}
+
+.shadow {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12) !important;
+}
+
+.shadow-lg {
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15) !important;
+}
+
+/* Responsive Enhancements */
+@media (max-width: 768px) {
+    .dashboard-title {
+        font-size: 1.75rem;
+    }
+    
+    .dashboard-subtitle {
+        font-size: 1rem;
+    }
+    
+    .card-header {
+        padding: 1rem;
+    }
+}
+
+/* Loading Animation */
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+.loading {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Professional Color Palette */
+:root {
+    --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --success-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    --info-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    --warning-gradient: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+    --danger-gradient: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+}
+
+/* ============================================
+   PROFESSIONAL CHART SECTION ENHANCEMENTS
+   ============================================ */
+
+/* Chart Card Enhancements */
+.chart-card {
+    border-radius: 20px;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    position: relative;
+}
+
+.chart-card:hover {
+    transform: translateY(-10px) scale(1.02);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.2) !important;
+}
+
+/* Gradient Chart Headers */
+.chart-header-gradient-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 1.5rem;
+    border: none;
+    position: relative;
+    overflow: hidden;
+}
+
+.chart-header-gradient-primary::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    animation: shimmer 4s infinite;
+}
+
+.chart-header-gradient-success {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    padding: 1.5rem;
+    border: none;
+    position: relative;
+    overflow: hidden;
+}
+
+.chart-header-gradient-success::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    animation: shimmer 4s infinite;
+}
+
+.chart-header-gradient-info {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    padding: 1.5rem;
+    border: none;
+    position: relative;
+    overflow: hidden;
+}
+
+.chart-header-gradient-info::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    animation: shimmer 4s infinite;
+}
+
+/* Chart Header Icon */
+.chart-header-icon {
+    width: 50px;
+    height: 50px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: white;
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(255,255,255,0.3);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+/* Responsive Chart Container */
+.chart-container-responsive {
+    position: relative;
+    height: 280px;
+    width: 100%;
+    padding: 10px;
+}
+
+@media (max-width: 1200px) {
+    .chart-container-responsive {
+        height: 250px;
+    }
+}
+
+@media (max-width: 768px) {
+    .chart-container-responsive {
+        height: 220px;
+    }
+}
+
+@media (max-width: 576px) {
+    .chart-container-responsive {
+        height: 200px;
+    }
+}
+
+/* Chart Legend Section */
+.chart-legend-section {
+    border-top: 2px solid #f0f0f0;
+    padding-top: 1.5rem;
+}
+
+.chart-stat-item {
+    padding: 1rem;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    margin-bottom: 1rem;
+    transition: all 0.3s ease;
+    border-left: 4px solid transparent;
+}
+
+.chart-stat-item:hover {
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    transform: translateX(5px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    border-left-color: #667eea;
+}
+
+/* Stat Indicators */
+.stat-indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.stat-indicator-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.stat-indicator-success {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+}
+
+.stat-indicator-info {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.stat-indicator-warning {
+    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+}
+
+.stat-indicator-danger {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+}
+
+/* Stat Labels */
+.stat-label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #495057;
+}
+
+/* Gradient Badges */
+.stat-badge {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: white;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    transition: all 0.3s ease;
+}
+
+.stat-badge:hover {
+    transform: scale(1.1);
+}
+
+.badge-gradient-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.badge-gradient-success {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+}
+
+.badge-gradient-info {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.badge-gradient-warning {
+    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+}
+
+.badge-gradient-danger {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+}
+
+/* Modern Progress Bars */
+.progress-modern {
+    height: 10px;
+    border-radius: 10px;
+    background: #e9ecef;
+    overflow: hidden;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.progress-bar-gradient-primary {
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+}
+
+.progress-bar-gradient-success {
+    background: linear-gradient(90deg, #11998e 0%, #38ef7d 100%);
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(17, 153, 142, 0.4);
+}
+
+.progress-bar-gradient-info {
+    background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(79, 172, 254, 0.4);
+}
+
+.progress-bar-gradient-warning {
+    background: linear-gradient(90deg, #fa709a 0%, #fee140 100%);
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(250, 112, 154, 0.4);
+}
+
+.progress-bar-gradient-danger {
+    background: linear-gradient(90deg, #ff6b6b 0%, #ee5a6f 100%);
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(255, 107, 107, 0.4);
+}
+
+.progress-bar-animated {
+    animation: progressAnimation 2s ease-in-out infinite;
+}
+
+@keyframes progressAnimation {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.8;
+    }
+}
+
+/* Chart Card Body */
+.chart-card .card-body {
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+}
+
+/* Responsive Chart Headers */
+@media (max-width: 768px) {
+    .chart-header-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1.2rem;
+    }
+    
+    .chart-header-gradient-primary,
+    .chart-header-gradient-success,
+    .chart-header-gradient-info {
+        padding: 1rem;
+    }
+    
+    .chart-header-gradient-primary h6,
+    .chart-header-gradient-success h6,
+    .chart-header-gradient-info h6 {
+        font-size: 0.9rem;
+    }
+    
+    .chart-header-gradient-primary small,
+    .chart-header-gradient-success small,
+    .chart-header-gradient-info small {
+        font-size: 0.75rem;
+    }
+}
+
+/* Chart Loading State */
+.chart-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 280px;
+    color: #6c757d;
+}
+
+.chart-loading i {
+    font-size: 3rem;
+    animation: pulse 2s infinite;
+}
+
+/* Chart Empty State */
+.chart-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 280px;
+    color: #adb5bd;
+}
+
+.chart-empty i {
+    font-size: 4rem;
+    opacity: 0.3;
+    margin-bottom: 1rem;
+}
+
+.chart-empty p {
+    font-size: 0.95rem;
+    margin: 0;
+}
+
+/* Mobile Responsive Statistics Grid */
+@media (max-width: 767px) {
+    .stats-grid-mobile {
+        gap: 0.75rem !important;
+    }
+    
+    .stats-grid-mobile .col-6 {
+        padding-left: 0.375rem;
+        padding-right: 0.375rem;
+    }
+    
+    .stat-card-premium {
+        margin-bottom: 0;
+    }
+    
+    .stat-icon-premium .icon-circle {
+        width: 45px;
+        height: 45px;
+    }
+    
+    .stat-icon-premium .icon-circle i {
+        font-size: 1.25rem;
+    }
+    
+    .stat-number-premium {
+        font-size: 1.5rem;
+    }
+    
+    .stat-label-premium {
+        font-size: 0.75rem;
+        line-height: 1.2;
+    }
+    
+    .stat-trend {
+        font-size: 0.7rem;
+    }
+    
+    .stat-trend i {
+        font-size: 0.65rem;
+    }
+}
+
+@media (max-width: 575px) {
+    .stats-grid-mobile {
+        gap: 0.5rem !important;
+    }
+    
+    .stats-grid-mobile .col-6 {
+        padding-left: 0.25rem;
+        padding-right: 0.25rem;
+    }
+    
+    .stat-card-premium {
+        padding: 0.75rem 0.5rem;
+    }
+    
+    .stat-icon-premium .icon-circle {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .stat-icon-premium .icon-circle i {
+        font-size: 1.1rem;
+    }
+    
+    .stat-number-premium {
+        font-size: 1.35rem;
+    }
+    
+    .stat-label-premium {
+        font-size: 0.7rem;
+    }
+    
+    .stat-trend {
+        font-size: 0.65rem;
+    }
+}
+</style>
+
+{% endblock %}

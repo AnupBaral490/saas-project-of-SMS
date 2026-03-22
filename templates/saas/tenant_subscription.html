@@ -1,0 +1,213 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ tenant.name }} - Subscription{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="mb-0">Subscription Management</h1>
+                    <p class="text-muted mb-0">{{ organization.name }}</p>
+                </div>
+                <a href="{% url 'saas:tenant_dashboard' %}" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Current Subscription -->
+    {% if current_subscription %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Current Subscription</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <p class="text-muted">Plan</p>
+                            <h3 class="mb-0">{{ current_plan.name }}</h3>
+                            <p class="text-muted small mt-2">{{ current_plan.description }}</p>
+                        </div>
+                        <div class="col-md-4">
+                            <p class="text-muted">Status</p>
+                            {% if subscription_active %}
+                                <span class="badge bg-success fs-6 mb-2">Active</span>
+                                <p class="mb-0 small">
+                                    Until <strong>{{ current_subscription.end_date|date:'F d, Y' }}</strong>
+                                </p>
+                            {% else %}
+                                <span class="badge bg-danger fs-6 mb-2">Inactive</span>
+                                <p class="mb-0 small text-muted">Plan has expired</p>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4 text-md-right">
+                            <p class="text-muted">Monthly Price</p>
+                            <h3 class="mb-0">${{ current_plan.price }}</h3>
+                            <p class="text-muted small mt-2">/month</p>
+                        </div>
+                    </div>
+                    <hr class="my-4">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-3">Plan Features</h6>
+                            <ul class="list-unstyled">
+                                <li class="mb-2">
+                                    <i class="fas fa-check text-success"></i>
+                                    <strong>{{ current_plan.max_students }}</strong> Max Students
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-check text-success"></i>
+                                    <strong>{{ current_plan.max_teachers }}</strong> Max Teachers
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-check text-success"></i>
+                                    <strong>{{ current_plan.max_admins }}</strong> Max Admins
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-3">Advanced Features</h6>
+                            <ul class="list-unstyled">
+                                {% if current_plan.feature_flags.attendance_tracking %}
+                                <li class="mb-2"><i class="fas fa-check text-success"></i> Attendance Tracking</li>
+                                {% endif %}
+                                {% if current_plan.feature_flags.grade_management %}
+                                <li class="mb-2"><i class="fas fa-check text-success"></i> Grade Management</li>
+                                {% endif %}
+                                {% if current_plan.feature_flags.fee_management %}
+                                <li class="mb-2"><i class="fas fa-check text-success"></i> Fee Management</li>
+                                {% endif %}
+                                {% if current_plan.feature_flags.advanced_reports %}
+                                <li class="mb-2"><i class="fas fa-check text-success"></i> Advanced Reports</li>
+                                {% endif %}
+                                {% if current_plan.feature_flags.api_access %}
+                                <li class="mb-2"><i class="fas fa-check text-success"></i> API Access</li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                    </div>
+                    <hr class="my-4">
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-secondary">
+                            <i class="fas fa-download"></i> Download Invoice
+                        </button>
+                        <button class="btn btn-outline-danger">
+                            <i class="fas fa-pause"></i> Cancel Subscription
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Available Plans -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h5 class="mb-3">Available Plans</h5>
+        </div>
+        {% for plan in available_plans %}
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="card h-100 border-0 shadow-sm {% if plan.id == current_plan.id %}border-primary border-2{% endif %}">
+                <div class="card-body">
+                    <h5 class="card-title">{{ plan.name }}</h5>
+                    <p class="text-muted small mb-3">{{ plan.description }}</p>
+                    
+                    <div class="mb-4">
+                        <span class="display-6 fw-bold">${{ plan.price }}</span>
+                        <span class="text-muted">/month</span>
+                    </div>
+
+                    <ul class="list-unstyled small mb-4">
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i>
+                            {{ plan.max_students }} Students
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i>
+                            {{ plan.max_teachers }} Teachers
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i>
+                            {{ plan.max_admins }} Admins
+                        </li>
+                        {% if plan.feature_flags.fee_management %}
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i>
+                            Fee Management
+                        </li>
+                        {% endif %}
+                        {% if plan.feature_flags.advanced_reports %}
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i>
+                            Advanced Reports
+                        </li>
+                        {% endif %}
+                    </ul>
+
+                    {% if plan.id == current_plan.id %}
+                        <button class="btn btn-primary w-100 disabled">
+                            Current Plan
+                        </button>
+                    {% else %}
+                        <button class="btn btn-outline-primary w-100">
+                            {% if plan.price > current_plan.price %}
+                                Upgrade
+                            {% else %}
+                                Downgrade
+                            {% endif %}
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Payment History -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Payment History</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Amount</th>
+                                    <th>Description</th>
+                                    <th>Status</th>
+                                    <th>Invoice</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>{{ current_subscription.created_at|date:"F d, Y" }}</td>
+                                    <td>${{ current_plan.price }}</td>
+                                    <td>{{ current_plan.name }} - Monthly Subscription</td>
+                                    <td><span class="badge bg-success">Completed</span></td>
+                                    <td>
+                                        <a href="#" class="btn btn-sm btn-link">
+                                            <i class="fas fa-download"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

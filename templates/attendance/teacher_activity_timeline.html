@@ -1,0 +1,309 @@
+{% extends 'base.html' %}
+
+{% block title %}Teacher Activity Timeline - SMS{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2><i class="fas fa-timeline"></i> Real-Time Teacher Activity Timeline</h2>
+        <p class="text-muted">Detailed view of teacher activities with exact timestamps</p>
+    </div>
+</div>
+
+<!-- Filter Controls -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <form method="get" class="d-flex gap-2">
+            <select name="teacher" class="form-control">
+                <option value="">All Teachers</option>
+                {% for teacher in teachers %}
+                <option value="{{ teacher.id }}" {% if selected_teacher == teacher.id|stringformat:"s" %}selected{% endif %}>
+                    {{ teacher.user.get_full_name }}
+                </option>
+                {% endfor %}
+            </select>
+            <input type="date" name="date" value="{{ selected_date }}" class="form-control">
+            <select name="activity_type" class="form-control">
+                <option value="">All Activities</option>
+                {% for type_code, type_name in activity_types %}
+                <option value="{{ type_code }}" {% if selected_activity_type == type_code %}selected{% endif %}>
+                    {{ type_name }}
+                </option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-filter"></i> Filter
+            </button>
+        </form>
+    </div>
+    <div class="col-md-4 text-end">
+        <button class="btn btn-success" onclick="refreshTimeline()">
+            <i class="fas fa-sync"></i> Refresh
+        </button>
+        <a href="{% url 'attendance:teacher_attendance_dashboard' %}" class="btn btn-info">
+            <i class="fas fa-dashboard"></i> Dashboard
+        </a>
+    </div>
+</div>
+
+<!-- Activity Statistics -->
+<div class="row mb-4">
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card bg-gradient-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6>Total Activities</h6>
+                        <h3>{{ total_activities }}</h3>
+                        <small>Today</small>
+                    </div>
+                    <i class="fas fa-activity fa-3x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card bg-gradient-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6>Attendance Marked</h6>
+                        <h3>{{ attendance_activities }}</h3>
+                        <small>Sessions</small>
+                    </div>
+                    <i class="fas fa-check-circle fa-3x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card bg-gradient-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6>Assignments Created</h6>
+                        <h3>{{ assignment_activities }}</h3>
+                        <small>Today</small>
+                    </div>
+                    <i class="fas fa-tasks fa-3x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card bg-gradient-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6>Active Teachers</h6>
+                        <h3>{{ active_teachers }}</h3>
+                        <small>Last 30 min</small>
+                    </div>
+                    <i class="fas fa-users fa-3x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Activity Timeline -->
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h6 class="m-0">
+                    <i class="fas fa-clock"></i> Activity Timeline - {{ filter_date }}
+                    <span class="badge bg-light text-dark ms-2">{{ activities.count }} activities</span>
+                </h6>
+            </div>
+            <div class="card-body">
+                {% if activities %}
+                <div class="timeline">
+                    {% for activity in activities %}
+                    <div class="timeline-item">
+                        <div class="timeline-marker">
+                            {% if activity.activity_type == 'mark_attendance' %}
+                                <i class="fas fa-check text-success"></i>
+                            {% elif activity.activity_type == 'create_assignment' %}
+                                <i class="fas fa-tasks text-warning"></i>
+                            {% elif activity.activity_type == 'grade_exam' %}
+                                <i class="fas fa-star text-info"></i>
+                            {% elif activity.activity_type == 'login' or activity.activity_type == 'first_login' %}
+                                <i class="fas fa-sign-in-alt text-primary"></i>
+                            {% elif activity.activity_type == 'logout' %}
+                                <i class="fas fa-sign-out-alt text-danger"></i>
+                            {% elif activity.activity_type == 'send_message' %}
+                                <i class="fas fa-envelope text-info"></i>
+                            {% else %}
+                                <i class="fas fa-circle text-secondary"></i>
+                            {% endif %}
+                        </div>
+                        <div class="timeline-content">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-1">
+                                        <strong>{{ activity.teacher.user.get_full_name }}</strong>
+                                        <span class="badge bg-primary ms-2">
+                                            {{ activity.get_activity_type_display }}
+                                        </span>
+                                    </h6>
+                                    <p class="mb-1">{{ activity.description }}</p>
+                                    <small class="text-muted">
+                                        <i class="fas fa-clock"></i> {{ activity.timestamp|time:"H:i:s" }}
+                                        {% if activity.ip_address %}
+                                        | <i class="fas fa-map-marker-alt"></i> {{ activity.ip_address }}
+                                        {% endif %}
+                                    </small>
+                                </div>
+                                <div class="text-end">
+                                    <small class="text-muted">{{ activity.timestamp|timesince }} ago</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <!-- Pagination -->
+                {% if activities.has_other_pages %}
+                <nav aria-label="Activity pagination" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if activities.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ activities.previous_page_number }}{% if request.GET.teacher %}&teacher={{ request.GET.teacher }}{% endif %}{% if request.GET.date %}&date={{ request.GET.date }}{% endif %}{% if request.GET.activity_type %}&activity_type={{ request.GET.activity_type }}{% endif %}">Previous</a>
+                            </li>
+                        {% endif %}
+                        
+                        {% for num in activities.paginator.page_range %}
+                            {% if activities.number == num %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ num }}</span>
+                                </li>
+                            {% elif num > activities.number|add:'-3' and num < activities.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}{% if request.GET.teacher %}&teacher={{ request.GET.teacher }}{% endif %}{% if request.GET.date %}&date={{ request.GET.date }}{% endif %}{% if request.GET.activity_type %}&activity_type={{ request.GET.activity_type }}{% endif %}">{{ num }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if activities.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ activities.next_page_number }}{% if request.GET.teacher %}&teacher={{ request.GET.teacher }}{% endif %}{% if request.GET.date %}&date={{ request.GET.date }}{% endif %}{% if request.GET.activity_type %}&activity_type={{ request.GET.activity_type }}{% endif %}">Next</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+                
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-clock fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No activities found</h5>
+                    <p class="text-muted">No teacher activities recorded for the selected filters.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #dee2e6;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 30px;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -22px;
+    top: 5px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: white;
+    border: 2px solid #dee2e6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+}
+
+.timeline-content {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    border-left: 4px solid #007bff;
+}
+
+.timeline-item:nth-child(even) .timeline-content {
+    border-left-color: #28a745;
+}
+
+.timeline-item:nth-child(3n) .timeline-content {
+    border-left-color: #ffc107;
+}
+
+.timeline-item:nth-child(4n) .timeline-content {
+    border-left-color: #17a2b8;
+}
+</style>
+
+<script>
+function refreshTimeline() {
+    location.reload();
+}
+
+// Auto-refresh every 2 minutes
+setInterval(function() {
+    if (document.visibilityState === 'visible') {
+        location.reload();
+    }
+}, 120000);
+
+// Add activity badge color filter
+document.addEventListener('DOMContentLoaded', function() {
+    // Add custom filter for activity badge colors
+    const activities = document.querySelectorAll('.timeline-item');
+    activities.forEach(function(item) {
+        const badge = item.querySelector('.badge');
+        if (badge) {
+            // Remove existing bg classes
+            badge.classList.remove('bg-primary', 'bg-success', 'bg-warning', 'bg-info', 'bg-danger', 'bg-secondary');
+            
+            const activityType = badge.textContent.trim().toLowerCase();
+            if (activityType.includes('attendance')) {
+                badge.classList.add('bg-success');
+            } else if (activityType.includes('assignment')) {
+                badge.classList.add('bg-warning');
+            } else if (activityType.includes('exam') || activityType.includes('grade')) {
+                badge.classList.add('bg-info');
+            } else if (activityType.includes('login')) {
+                badge.classList.add('bg-primary');
+            } else if (activityType.includes('logout')) {
+                badge.classList.add('bg-danger');
+            } else {
+                badge.classList.add('bg-secondary');
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

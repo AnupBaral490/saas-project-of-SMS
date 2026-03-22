@@ -1,0 +1,238 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ class_obj.name }} Students - SMS{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-users"></i> {{ class_obj.name }} - Students</h2>
+            <div>
+                <a href="{% url 'accounts:dashboard' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+                {% if can_manage %}
+                <a href="{% url 'attendance:mark_attendance' %}" class="btn btn-primary">
+                    <i class="fas fa-check-circle"></i> Mark Attendance
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Class Information -->
+<div class="row mb-4">
+    <div class="col-lg-4">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h6 class="m-0"><i class="fas fa-info-circle"></i> Class Information</h6>
+            </div>
+            <div class="card-body">
+                <p><strong>Course:</strong> {{ class_obj.course.name }}</p>
+                <p><strong>Year:</strong> {{ class_obj.year }}</p>
+                <p><strong>Semester:</strong> {{ class_obj.semester }}</p>
+                <p><strong>Section:</strong> {{ class_obj.section }}</p>
+                <p><strong>Academic Year:</strong> {{ class_obj.academic_year.year }}</p>
+                {% if class_obj.class_teacher %}
+                <p><strong>Class Teacher:</strong> {{ class_obj.class_teacher.user.get_full_name|default:class_obj.class_teacher.user.username }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-8">
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <div class="card bg-success text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6>Total Students</h6>
+                                <h4>{{ student_data|length }}</h4>
+                            </div>
+                            <i class="fas fa-users fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card bg-info text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6>Average Attendance</h6>
+                                <h4>
+                                    {% if student_data %}
+                                        {% with total_percentage=0 %}
+                                            {% for data in student_data %}
+                                                {% with total_percentage=total_percentage|add:data.attendance_percentage %}{% endwith %}
+                                            {% endfor %}
+                                            {{ total_percentage|floatformat:0 }}%
+                                        {% endwith %}
+                                    {% else %}
+                                        0%
+                                    {% endif %}
+                                </h4>
+                            </div>
+                            <i class="fas fa-chart-line fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card bg-warning text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6>Active Students</h6>
+                                <h4>{{ student_data|length }}</h4>
+                            </div>
+                            <i class="fas fa-user-check fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Students List -->
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                <h6 class="m-0"><i class="fas fa-list"></i> Students List</h6>
+                {% if can_manage %}
+                <div>
+                    <a href="{% url 'academic:enrollment_list' %}" class="btn btn-sm btn-light">
+                        <i class="fas fa-plus"></i> Enroll Student
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                {% if student_data %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Student</th>
+                                <th>Student ID</th>
+                                <th>Email</th>
+                                <th>Attendance</th>
+                                <th>Sessions</th>
+                                {% if can_manage %}
+                                <th>Actions</th>
+                                {% endif %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for data in student_data %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        {% if data.student.user.profile_picture %}
+                                            <img src="{{ data.student.user.profile_picture.url }}" class="rounded-circle me-2" width="35" height="35">
+                                        {% else %}
+                                            <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 35px; height: 35px;">
+                                                <i class="fas fa-user text-white"></i>
+                                            </div>
+                                        {% endif %}
+                                        <div>
+                                            <strong>{{ data.student.user.get_full_name|default:data.student.user.username }}</strong>
+                                            <br><small class="text-muted">Enrolled: {{ data.enrollment.enrollment_date|date:"M d, Y" }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><strong>{{ data.student.student_id }}</strong></td>
+                                <td>{{ data.student.user.email }}</td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="progress me-2" style="width: 60px; height: 20px;">
+                                            {% if data.attendance_percentage >= 75 %}
+                                                <div class="progress-bar bg-success" style="width: {{ data.attendance_percentage }}%"></div>
+                                            {% elif data.attendance_percentage >= 50 %}
+                                                <div class="progress-bar bg-warning" style="width: {{ data.attendance_percentage }}%"></div>
+                                            {% else %}
+                                                <div class="progress-bar bg-danger" style="width: {{ data.attendance_percentage }}%"></div>
+                                            {% endif %}
+                                        </div>
+                                        <small>{{ data.attendance_percentage }}%</small>
+                                    </div>
+                                </td>
+                                <td>
+                                    <small class="text-muted">{{ data.present_sessions }}/{{ data.total_sessions }}</small>
+                                </td>
+                                {% if can_manage %}
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="{% url 'attendance:view_attendance' %}?student={{ data.student.id }}" class="btn btn-sm btn-outline-primary" title="View Attendance">
+                                            <i class="fas fa-calendar-check"></i>
+                                        </a>
+                                        <a href="{% url 'accounts:profile' %}?user={{ data.student.user.id }}" class="btn btn-sm btn-outline-info" title="View Profile">
+                                            <i class="fas fa-user"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                                {% endif %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-users fa-4x text-muted mb-4"></i>
+                    <h4 class="text-muted">No Students Enrolled</h4>
+                    <p class="text-muted">No students have been enrolled in this class yet.</p>
+                    {% if can_manage %}
+                    <a href="{% url 'academic:enrollment_list' %}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Enroll Students
+                    </a>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if can_manage and student_data %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header bg-warning text-white">
+                <h6 class="m-0"><i class="fas fa-tools"></i> Quick Actions</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-2">
+                        <a href="{% url 'attendance:mark_attendance' %}" class="btn btn-primary btn-block">
+                            <i class="fas fa-check-circle"></i> Mark Attendance
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="{% url 'academic:create_assignment' %}" class="btn btn-success btn-block">
+                            <i class="fas fa-plus"></i> Create Assignment
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="{% url 'examination:create_exam' %}" class="btn btn-info btn-block">
+                            <i class="fas fa-clipboard-list"></i> Create Exam
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="{% url 'notifications:create_notification' %}" class="btn btn-warning btn-block">
+                            <i class="fas fa-bell"></i> Send Notification
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

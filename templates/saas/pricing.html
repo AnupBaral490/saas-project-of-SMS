@@ -1,0 +1,193 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Pricing - Student Management System{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Pricing Header -->
+    <div class="text-center mb-5">
+        <h1 class="display-4 mb-3">Simple, Transparent Pricing</h1>
+        <p class="lead text-muted mb-4">Choose the perfect plan for your school</p>
+    </div>
+
+    <!-- Pricing Cards -->
+    <div class="row g-4 mb-5">
+        {% for plan in plans %}
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100 {% if plan.code == 'starter' %}border-primary shadow-lg{% endif %}">
+                {% if plan.code == 'starter' %}
+                <div class="badge bg-primary position-absolute top-0 start-50 translate-middle-x mt-2">
+                    POPULAR
+                </div>
+                {% endif %}
+                
+                <div class="card-body d-flex flex-column">
+                    <!-- Plan Name -->
+                    <h3 class="card-title mb-2">{{ plan.name }}</h3>
+                    <p class="text-muted small mb-3">{{ plan.description }}</p>
+                    
+                    <!-- Price -->
+                    <div class="mb-4">
+                        <span class="display-6 fw-bold">
+                            ${% if plan.price %}{{ plan.price }}{% else %}0{% endif %}
+                        </span>
+                        <span class="text-muted">/month</span>
+                    </div>
+
+                    <!-- Trial Info -->
+                    {% if plan.trial_days %}
+                    <p class="small text-success mb-3">
+                        <i class="fas fa-check-circle"></i> {{ plan.trial_days }}-day free trial
+                    </p>
+                    {% endif %}
+
+                    <!-- Features -->
+                    <ul class="list-unstyled mb-4 flex-grow-1">
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i>
+                            <strong>{{ plan.max_students|default:"Unlimited" }}</strong> Students
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i>
+                            <strong>{{ plan.max_teachers|default:"Unlimited" }}</strong> Teachers
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i>
+                            <strong>{{ plan.max_admins|default:"Unlimited" }}</strong> Admin Users
+                        </li>
+                        
+                        <!-- Feature Flags -->
+                        {% if plan.feature_flags.attendance_tracking %}
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i>
+                            Attendance Tracking
+                        </li>
+                        {% endif %}
+                        
+                        {% if plan.feature_flags.grade_management %}
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i>
+                            Grade Management
+                        </li>
+                        {% endif %}
+                        
+                        {% if plan.feature_flags.fee_management %}
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i>
+                            Fee Management
+                        </li>
+                        {% else %}
+                        <li class="mb-2 text-muted">
+                            <i class="fas fa-times"></i>
+                            Fee Management
+                        </li>
+                        {% endif %}
+                        
+                        {% if plan.feature_flags.advanced_reports %}
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i>
+                            Advanced Reports
+                        </li>
+                        {% else %}
+                        <li class="mb-2 text-muted">
+                            <i class="fas fa-times"></i>
+                            Advanced Reports
+                        </li>
+                        {% endif %}
+                        
+                        {% if plan.feature_flags.api_access %}
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i>
+                            API Access
+                        </li>
+                        {% else %}
+                        <li class="mb-2 text-muted">
+                            <i class="fas fa-times"></i>
+                            API Access
+                        </li>
+                        {% endif %}
+                    </ul>
+
+                    <!-- CTA Button -->
+                    <a href="{% url 'saas:signup_step1_organization' %}" 
+                       class="btn {% if plan.code == 'starter' %}btn-primary{% else %}btn-outline-primary{% endif %} w-100 mt-auto">
+                        Get Started
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- FAQ Section -->
+    <div class="row mt-5">
+        <div class="col-lg-8 mx-auto">
+            <h3 class="mb-4 text-center">Frequently Asked Questions</h3>
+            
+            <div class="accordion" id="faqAccordion">
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                            Can I change my plan later?
+                        </button>
+                    </h2>
+                    <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            Yes! You can upgrade or downgrade your plan at any time. Changes take effect on your next billing cycle.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                            Do you offer annual billing discounts?
+                        </button>
+                    </h2>
+                    <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            Contact us for annual billing discounts and special pricing for educational institutions.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                            Is there a trial period?
+                        </button>
+                    </h2>
+                    <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            Yes! All plans include a free trial period. No credit card required to start.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
+                            What payment methods do you accept?
+                        </button>
+                    </h2>
+                    <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            We accept all major credit cards through Stripe. Bank transfers available for Enterprise plans.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CTA Section -->
+    <div class="alert alert-info mt-5 text-center" role="alert">
+        <h4 class="alert-heading mb-3">Ready to get started?</h4>
+        <p class="mb-3">Join hundreds of schools using our platform to manage students, attendance, and more.</p>
+        <a href="{% url 'saas:signup_step1_organization' %}" class="btn btn-primary btn-lg">
+            Start Free Trial
+        </a>
+    </div>
+</div>
+{% endblock %}
