@@ -41,6 +41,25 @@
 							<input type="hidden" name="form_type" value="detailed">
 
 							<div class="mb-3">
+								<label class="form-label">Recipient Groups</label>
+								<div class="d-flex flex-wrap gap-2">
+									<button type="button" class="btn btn-outline-primary js-recipient-group-detailed" data-recipient="all_users">
+										<i class="fas fa-users"></i> Send All
+									</button>
+									<button type="button" class="btn btn-outline-info js-recipient-group-detailed" data-recipient="all_students">
+										<i class="fas fa-user-graduate"></i> All Students
+									</button>
+									<button type="button" class="btn btn-outline-success js-recipient-group-detailed" data-recipient="all_teachers">
+										<i class="fas fa-chalkboard-teacher"></i> All Teachers
+									</button>
+									<button type="button" class="btn btn-outline-warning js-recipient-group-detailed" data-recipient="all_parents">
+										<i class="fas fa-users"></i> All Parents
+									</button>
+								</div>
+								<div class="form-text">Pick a group to auto-select recipients below.</div>
+							</div>
+
+							<div class="mb-3">
 								<label class="form-label">Title</label>
 								{{ form.title }}
 								{% if form.title.errors %}
@@ -75,7 +94,7 @@
 
 							<div class="mb-3">
 								<label class="form-label">Recipients</label>
-								<div class="border rounded p-3" style="max-height: 260px; overflow-y: auto;">
+								<div class="border rounded p-3" id="detailedRecipients" style="max-height: 260px; overflow-y: auto;">
 									{{ form.recipients }}
 								</div>
 								{% if form.recipients.help_text %}
@@ -104,6 +123,25 @@
 						<form method="post">
 							{% csrf_token %}
 							<input type="hidden" name="form_type" value="quick">
+
+							<div class="mb-3">
+								<label class="form-label">Quick Recipient Groups</label>
+								<div class="d-flex flex-wrap gap-2">
+									<button type="button" class="btn btn-outline-primary js-recipient-group" data-recipient="all_users">
+										<i class="fas fa-users"></i> Send All
+									</button>
+									<button type="button" class="btn btn-outline-info js-recipient-group" data-recipient="all_students">
+										<i class="fas fa-user-graduate"></i> All Students
+									</button>
+									<button type="button" class="btn btn-outline-success js-recipient-group" data-recipient="all_teachers">
+										<i class="fas fa-chalkboard-teacher"></i> All Teachers
+									</button>
+									<button type="button" class="btn btn-outline-warning js-recipient-group" data-recipient="all_parents">
+										<i class="fas fa-users"></i> All Parents
+									</button>
+								</div>
+								<div class="form-text">Pick a group to auto-select the recipient list below.</div>
+							</div>
 
 							<div class="mb-3">
 								<label class="form-label">Title</label>
@@ -167,4 +205,65 @@
 		</div>
 	</div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+	const recipientSelect = document.getElementById('id_recipient_group');
+	const buttons = document.querySelectorAll('.js-recipient-group');
+	const detailedButtons = document.querySelectorAll('.js-recipient-group-detailed');
+	const detailedRecipients = document.getElementById('detailedRecipients');
+
+	if (!recipientSelect || buttons.length === 0) {
+		if (detailedButtons.length === 0 || !detailedRecipients) {
+			return;
+		}
+	}
+
+	buttons.forEach((button) => {
+		button.addEventListener('click', function() {
+			const value = this.getAttribute('data-recipient');
+			if (value) {
+				recipientSelect.value = value;
+			}
+		});
+	});
+
+	function applyDetailedRecipientGroup(group) {
+		if (!detailedRecipients) {
+			return;
+		}
+
+		const checkboxes = detailedRecipients.querySelectorAll('input[type="checkbox"]');
+		checkboxes.forEach((checkbox) => {
+			const label = checkbox.closest('label');
+			const labelText = label ? label.textContent : '';
+			if (group === 'all_users') {
+				checkbox.checked = true;
+				return;
+			}
+			if (group === 'all_students') {
+				checkbox.checked = labelText.includes('(Student)');
+				return;
+			}
+			if (group === 'all_teachers') {
+				checkbox.checked = labelText.includes('(Teacher)');
+				return;
+			}
+			if (group === 'all_parents') {
+				checkbox.checked = labelText.includes('(Parent)');
+				return;
+			}
+		});
+	}
+
+	detailedButtons.forEach((button) => {
+		button.addEventListener('click', function() {
+			const value = this.getAttribute('data-recipient');
+			if (value) {
+				applyDetailedRecipientGroup(value);
+			}
+		});
+	});
+});
+</script>
 {% endblock %}
