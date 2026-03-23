@@ -197,6 +197,12 @@
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="fees-tab" data-bs-toggle="pill" data-bs-target="#fees" type="button" role="tab">
+                        <i class="fas fa-dollar-sign"></i>
+                        <span>Fees</span>
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
                     <button class="nav-link" id="activities-tab" data-bs-toggle="pill" data-bs-target="#activities" type="button" role="tab">
                         <i class="fas fa-chart-line"></i>
                         <span>Activities</span>
@@ -522,6 +528,60 @@
                                 <div class="admin-feature-content">
                                     <h6 class="admin-feature-title">Create Exam</h6>
                                     <p class="admin-feature-desc">Schedule new examinations</p>
+                                </div>
+                                <i class="fas fa-arrow-right admin-feature-arrow"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Fees Tab -->
+                <div class="tab-pane fade" id="fees" role="tabpanel">
+                    <div class="row g-3">
+                        <div class="col-lg-4 col-md-6">
+                            <a href="/admin/fees/feestructure/" class="admin-feature-card">
+                                <div class="admin-feature-icon admin-feature-icon-primary">
+                                    <i class="fas fa-file-invoice-dollar"></i>
+                                </div>
+                                <div class="admin-feature-content">
+                                    <h6 class="admin-feature-title">Fee Structures</h6>
+                                    <p class="admin-feature-desc">Set class-wise fee plans</p>
+                                </div>
+                                <i class="fas fa-arrow-right admin-feature-arrow"></i>
+                            </a>
+                        </div>
+                        <div class="col-lg-4 col-md-6">
+                            <a href="/admin/fees/studentfee/" class="admin-feature-card">
+                                <div class="admin-feature-icon admin-feature-icon-success">
+                                    <i class="fas fa-dollar-sign"></i>
+                                </div>
+                                <div class="admin-feature-content">
+                                    <h6 class="admin-feature-title">Student Fees</h6>
+                                    <p class="admin-feature-desc">Track student fee status</p>
+                                </div>
+                                <i class="fas fa-arrow-right admin-feature-arrow"></i>
+                            </a>
+                        </div>
+                        <div class="col-lg-4 col-md-6">
+                            <a href="/admin/fees/feepayment/" class="admin-feature-card">
+                                <div class="admin-feature-icon admin-feature-icon-info">
+                                    <i class="fas fa-receipt"></i>
+                                </div>
+                                <div class="admin-feature-content">
+                                    <h6 class="admin-feature-title">Fee Payments</h6>
+                                    <p class="admin-feature-desc">Record and review payments</p>
+                                </div>
+                                <i class="fas fa-arrow-right admin-feature-arrow"></i>
+                            </a>
+                        </div>
+                        <div class="col-lg-4 col-md-6">
+                            <a href="/admin/fees/feewaiver/" class="admin-feature-card">
+                                <div class="admin-feature-icon admin-feature-icon-warning">
+                                    <i class="fas fa-percentage"></i>
+                                </div>
+                                <div class="admin-feature-content">
+                                    <h6 class="admin-feature-title">Fee Waivers</h6>
+                                    <p class="admin-feature-desc">Manage discounts and waivers</p>
                                 </div>
                                 <i class="fas fa-arrow-right admin-feature-arrow"></i>
                             </a>
