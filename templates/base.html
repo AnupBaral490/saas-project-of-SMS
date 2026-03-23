@@ -105,9 +105,12 @@
                 </a>
             </li>
             <li>
-                <a href="{% url 'accounts:logout' %}" class="logout">
-                    <i class="fas fa-sign-out-alt"></i> <span class="sidebar-text">Logout</span>
-                </a>
+                <form method="post" action="{% url 'accounts:logout' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="logout">
+                        <i class="fas fa-sign-out-alt"></i> <span class="sidebar-text">Logout</span>
+                    </button>
+                </form>
             </li>
         </ul>
     </aside>

@@ -564,6 +564,26 @@ body {
     white-space: nowrap;
 }
 
+.sidebar-menu form {
+    margin: 0;
+}
+
+.sidebar-menu button.logout {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 0.7rem 1.5rem;
+    background: none;
+    border: none;
+    color: #f87171;
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
 .sidebar-menu a i {
     width: 18px;
     text-align: center;
@@ -575,6 +595,11 @@ body {
 }
 
 .sidebar-menu a:hover {
+    background-color: #1f2937;
+    color: #ffffff;
+}
+
+.sidebar-menu button.logout:hover {
     background-color: #1f2937;
     color: #ffffff;
 }
