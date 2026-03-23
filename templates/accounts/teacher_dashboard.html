@@ -1322,6 +1322,10 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Function to update notification count
     function updateNotificationCount() {
+        if (!notificationBadge) {
+            return;
+        }
+
         fetch('{% url "notifications:get_unread_count" %}')
             .then(response => response.json())
             .then(data => {
@@ -1341,6 +1345,10 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Function to load recent notifications
     function loadRecentNotifications() {
+        if (!notificationList) {
+            return;
+        }
+
         fetch('{% url "notifications:get_recent_notifications" %}')
             .then(response => response.json())
             .then(data => {
@@ -1404,9 +1412,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Load notifications when dropdown is opened
-    notificationDropdown.addEventListener('click', function() {
-        loadRecentNotifications();
-    });
+    if (notificationDropdown) {
+        notificationDropdown.addEventListener('click', function() {
+            loadRecentNotifications();
+        });
+    }
     
     // Initial load
     updateNotificationCount();
