@@ -1325,12 +1325,13 @@ document.addEventListener('DOMContentLoaded', function() {
         fetch('{% url "notifications:get_unread_count" %}')
             .then(response => response.json())
             .then(data => {
-                const count = data.unread_count;
+                const count = data.unread_count || 0;
                 if (count > 0) {
-                    notificationBadge.textContent = count > 99 ? '99+' : count;
+                    notificationBadge.textContent = count + '+';
                     notificationBadge.style.display = 'block';
                 } else {
                     notificationBadge.style.display = 'none';
+                    notificationBadge.textContent = '';
                 }
             })
             .catch(error => {

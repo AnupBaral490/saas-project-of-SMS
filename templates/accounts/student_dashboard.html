@@ -26,7 +26,7 @@
                     </a>
                     <a href="{% url 'notifications:notification_list' %}" class="action-icon-btn" title="Notifications">
                         <i class="fas fa-bell"></i>
-                        <span class="notification-badge"></span>
+                        <span class="notification-badge" id="notificationBadge" style="display: none;"></span>
                     </a>
                 </div>
                 
@@ -2104,9 +2104,35 @@
 <!-- Initialize Charts -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    const notificationBadge = document.getElementById('notificationBadge');
+
+    function updateNotificationCount() {
+        if (!notificationBadge) {
+            return;
+        }
+
+        fetch('{% url "notifications:get_unread_count" %}')
+            .then(response => response.json())
+            .then(data => {
+                const count = data.unread_count || 0;
+                if (count > 0) {
+                    notificationBadge.textContent = count + '+';
+                    notificationBadge.style.display = 'flex';
+                } else {
+                    notificationBadge.style.display = 'none';
+                    notificationBadge.textContent = '';
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching notification count:', error);
+            });
+    }
+
     // Check if chart data exists
     if (typeof window.studentChartData === 'undefined') {
         console.log('No chart data available');
+        updateNotificationCount();
+        setInterval(updateNotificationCount, 30000);
         return;
     }
     
@@ -2275,6 +2301,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+
+    updateNotificationCount();
+    setInterval(updateNotificationCount, 30000);
 });
 </script>
 
