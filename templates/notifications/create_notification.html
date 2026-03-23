@@ -1,0 +1,170 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Notification - SMS{% endblock %}
+
+{% block content %}
+<div class="row">
+	<div class="col-12">
+		<div class="d-flex justify-content-between align-items-center mb-4">
+			<h2><i class="fas fa-bell"></i> Create Notification</h2>
+			<a href="{% url 'notifications:notification_list' %}" class="btn btn-outline-secondary">
+				<i class="fas fa-arrow-left"></i> Back to Notifications
+			</a>
+		</div>
+	</div>
+</div>
+
+<div class="row">
+	<div class="col-12">
+		<div class="card shadow">
+			<div class="card-header bg-primary text-white">
+				<h6 class="m-0"><i class="fas fa-paper-plane"></i> Send Notification</h6>
+			</div>
+			<div class="card-body">
+				<ul class="nav nav-pills mb-3" role="tablist">
+					<li class="nav-item" role="presentation">
+						<button class="nav-link active" id="detailed-tab" data-bs-toggle="pill" data-bs-target="#detailed" type="button" role="tab">
+							<i class="fas fa-list"></i> Detailed
+						</button>
+					</li>
+					<li class="nav-item" role="presentation">
+						<button class="nav-link" id="quick-tab" data-bs-toggle="pill" data-bs-target="#quick" type="button" role="tab">
+							<i class="fas fa-bolt"></i> Quick
+						</button>
+					</li>
+				</ul>
+
+				<div class="tab-content">
+					<div class="tab-pane fade show active" id="detailed" role="tabpanel">
+						<form method="post">
+							{% csrf_token %}
+							<input type="hidden" name="form_type" value="detailed">
+
+							<div class="mb-3">
+								<label class="form-label">Title</label>
+								{{ form.title }}
+								{% if form.title.errors %}
+									<div class="text-danger small">{{ form.title.errors.0 }}</div>
+								{% endif %}
+							</div>
+
+							<div class="mb-3">
+								<label class="form-label">Message</label>
+								{{ form.message }}
+								{% if form.message.errors %}
+									<div class="text-danger small">{{ form.message.errors.0 }}</div>
+								{% endif %}
+							</div>
+
+							<div class="row">
+								<div class="col-md-6 mb-3">
+									<label class="form-label">Type</label>
+									{{ form.notification_type }}
+									{% if form.notification_type.errors %}
+										<div class="text-danger small">{{ form.notification_type.errors.0 }}</div>
+									{% endif %}
+								</div>
+								<div class="col-md-6 mb-3">
+									<label class="form-label">Priority</label>
+									{{ form.priority }}
+									{% if form.priority.errors %}
+										<div class="text-danger small">{{ form.priority.errors.0 }}</div>
+									{% endif %}
+								</div>
+							</div>
+
+							<div class="mb-3">
+								<label class="form-label">Recipients</label>
+								<div class="border rounded p-3" style="max-height: 260px; overflow-y: auto;">
+									{{ form.recipients }}
+								</div>
+								{% if form.recipients.help_text %}
+									<div class="form-text">{{ form.recipients.help_text }}</div>
+								{% endif %}
+								{% if form.recipients.errors %}
+									<div class="text-danger small">{{ form.recipients.errors.0 }}</div>
+								{% endif %}
+							</div>
+
+							<div class="form-check mb-3">
+								{{ form.send_email }}
+								<label class="form-check-label">Also send by email</label>
+								{% if form.send_email.errors %}
+									<div class="text-danger small">{{ form.send_email.errors.0 }}</div>
+								{% endif %}
+							</div>
+
+							<button type="submit" class="btn btn-primary">
+								<i class="fas fa-paper-plane"></i> Send Notification
+							</button>
+						</form>
+					</div>
+
+					<div class="tab-pane fade" id="quick" role="tabpanel">
+						<form method="post">
+							{% csrf_token %}
+							<input type="hidden" name="form_type" value="quick">
+
+							<div class="mb-3">
+								<label class="form-label">Title</label>
+								{{ quick_form.title }}
+								{% if quick_form.title.errors %}
+									<div class="text-danger small">{{ quick_form.title.errors.0 }}</div>
+								{% endif %}
+							</div>
+
+							<div class="mb-3">
+								<label class="form-label">Message</label>
+								{{ quick_form.message }}
+								{% if quick_form.message.errors %}
+									<div class="text-danger small">{{ quick_form.message.errors.0 }}</div>
+								{% endif %}
+							</div>
+
+							<div class="row">
+								<div class="col-md-6 mb-3">
+									<label class="form-label">Type</label>
+									{{ quick_form.notification_type }}
+									{% if quick_form.notification_type.errors %}
+										<div class="text-danger small">{{ quick_form.notification_type.errors.0 }}</div>
+									{% endif %}
+								</div>
+								<div class="col-md-6 mb-3">
+									<label class="form-label">Priority</label>
+									{{ quick_form.priority }}
+									{% if quick_form.priority.errors %}
+										<div class="text-danger small">{{ quick_form.priority.errors.0 }}</div>
+									{% endif %}
+								</div>
+							</div>
+
+							<div class="mb-3">
+								<label class="form-label">Recipient Group</label>
+								{{ quick_form.recipient_group }}
+								{% if quick_form.recipient_group.help_text %}
+									<div class="form-text">{{ quick_form.recipient_group.help_text }}</div>
+								{% endif %}
+								{% if quick_form.recipient_group.errors %}
+									<div class="text-danger small">{{ quick_form.recipient_group.errors.0 }}</div>
+								{% endif %}
+							</div>
+
+							<div class="form-check mb-3">
+								{{ quick_form.send_email }}
+								<label class="form-check-label">Also send by email</label>
+								{% if quick_form.send_email.errors %}
+									<div class="text-danger small">{{ quick_form.send_email.errors.0 }}</div>
+								{% endif %}
+							</div>
+
+							<button type="submit" class="btn btn-primary">
+								<i class="fas fa-bolt"></i> Send Quick Notification
+							</button>
+						</form>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+{% endblock %}

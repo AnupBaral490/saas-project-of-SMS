@@ -239,6 +239,18 @@
                             </a>
                         </div>
                         <div class="col-lg-4 col-md-6">
+                            <a href="{% url 'notifications:create_notification' %}" class="admin-feature-card">
+                                <div class="admin-feature-icon admin-feature-icon-warning">
+                                    <i class="fas fa-bell"></i>
+                                </div>
+                                <div class="admin-feature-content">
+                                    <h6 class="admin-feature-title">Create Notification</h6>
+                                    <p class="admin-feature-desc">Send alerts to users</p>
+                                </div>
+                                <i class="fas fa-arrow-right admin-feature-arrow"></i>
+                            </a>
+                        </div>
+                        <div class="col-lg-4 col-md-6">
                             <a href="{% url 'accounts:admin_user_list' %}?type=student" class="admin-feature-card">
                                 <div class="admin-feature-icon admin-feature-icon-info">
                                     <i class="fas fa-user-graduate"></i>
