@@ -19,4 +19,3 @@ class ExamResultAdmin(admin.ModelAdmin):
     search_fields = ('student__user__username', 'student__student_id', 'examination__name')
     list_filter = ('grade', 'is_passed', 'examination__exam_type', 'examination__subject')
     readonly_fields = ('grade', 'is_passed')
-

@@ -395,12 +395,16 @@ class AssignmentForm(forms.ModelForm):
         if teacher:
             # Filter subjects and classes based on teacher's assignments
             teacher_assignments = TeacherSubjectAssignment.objects.filter(teacher=teacher)
-            self.fields['subject'].queryset = Subject.objects.filter(
-                id__in=teacher_assignments.values_list('subject_id', flat=True)
-            )
-            self.fields['class_assigned'].queryset = Class.objects.filter(
-                id__in=teacher_assignments.values_list('class_assigned_id', flat=True)
-            )
+            subject_ids = teacher_assignments.values_list('subject_id', flat=True)
+            class_ids = teacher_assignments.values_list('class_assigned_id', flat=True)
+
+            if subject_ids.exists() or class_ids.exists():
+                self.fields['subject'].queryset = Subject.objects.filter(id__in=subject_ids)
+                self.fields['class_assigned'].queryset = Class.objects.filter(id__in=class_ids)
+            elif organization is not None:
+                # Fallback to organization data when teacher has no assignments yet
+                self.fields['subject'].queryset = Subject.objects.filter(organization=organization)
+                self.fields['class_assigned'].queryset = Class.objects.filter(organization=organization)
 
 class AssignmentSubmissionForm(forms.ModelForm):
     class Meta:
