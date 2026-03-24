@@ -3928,7 +3928,7 @@ body {
 
 /* Admin Dashboard Header */
 .admin-dashboard-header-premium {
-    background: rgba(255, 255, 255, 0.9);
+    background: #f3f4f6;
     border-radius: 24px;
     padding: 2.5rem;
     box-shadow: 0 20px 60px rgba(15, 23, 42, 0.15);
@@ -4028,7 +4028,7 @@ body {
 
 .admin-header-text {
     color: #111111;
-    background: rgba(255, 255, 255, 0.9);
+    background: #f9fafb;
     padding: 0.9rem 1.25rem;
     border-radius: 16px;
     box-shadow: 0 10px 30px rgba(15, 23, 42, 0.15);
