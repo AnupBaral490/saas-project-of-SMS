@@ -1,12 +1,32 @@
+from django import forms
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
+from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from django.utils.html import format_html
 from django.urls import reverse
 from saas.utils import get_request_organization
 from saas.db_router import get_tenant_db
 from .models import User, StudentProfile, TeacherProfile, ParentProfile, AdminProfile, ParentTeacherMessage
 
+
+class CustomUserCreationForm(UserCreationForm):
+    email = forms.EmailField(required=True)
+
+    class Meta(UserCreationForm.Meta):
+        model = User
+        fields = ('username', 'email')
+
+
+class CustomUserChangeForm(UserChangeForm):
+    email = forms.EmailField(required=True)
+
+    class Meta(UserChangeForm.Meta):
+        model = User
+        fields = ('username', 'email', 'first_name', 'last_name')
+
 class CustomUserAdmin(UserAdmin):
+    add_form = CustomUserCreationForm
+    form = CustomUserChangeForm
     list_display = ('username', 'email', 'first_name', 'last_name', 'organization', 'user_type', 'is_active')
     list_filter = ('organization', 'user_type', 'is_active', 'is_staff')
     search_fields = ('username', 'email', 'first_name', 'last_name', 'organization__name', 'organization__slug')
@@ -14,6 +34,16 @@ class CustomUserAdmin(UserAdmin):
     fieldsets = UserAdmin.fieldsets + (
         ('Additional Info', {
             'fields': ('organization', 'user_type', 'phone_number', 'address', 'date_of_birth', 'profile_picture')
+        }),
+    )
+
+    add_fieldsets = (
+        (None, {
+            'classes': ('wide',),
+            'fields': ('username', 'email', 'password1', 'password2', 'user_type', 'is_staff', 'is_superuser'),
+        }),
+        ('Additional Info', {
+            'fields': ('organization', 'phone_number', 'address', 'date_of_birth', 'profile_picture'),
         }),
     )
     

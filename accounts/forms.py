@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate, password_validation
 from .models import User, StudentProfile, TeacherProfile, ParentProfile, AdminProfile
 from saas.utils import get_request_organization, organization_allows_access, user_belongs_to_organization
 
@@ -111,8 +111,14 @@ class UserRegistrationForm(UserCreationForm):
         if self.instance and self.instance.pk and not password1 and not password2:
             return password2
         
-        # Otherwise, use the default validation
-        return super().clean_password2()
+        # Otherwise, validate locally to avoid relying on parent implementation
+        if password1 and password2 and password1 != password2:
+            raise forms.ValidationError("The two password fields didn't match.")
+
+        if password1:
+            password_validation.validate_password(password1, self.instance)
+
+        return password2
     
     def save(self, commit=True):
         user = super().save(commit=False)

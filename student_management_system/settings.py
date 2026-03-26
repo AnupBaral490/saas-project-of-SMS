@@ -230,8 +230,16 @@ LOGIN_REDIRECT_URL = 'accounts:dashboard'
 LOGOUT_REDIRECT_URL = 'accounts:login'
 
 # Email Configuration (for notifications)
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-# Custom User Model
+# Use environment variables for Gmail SMTP credentials.
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+
+EMAIL_HOST_USER = 'baralanup832@gmail.com'
+EMAIL_HOST_PASSWORD = 'ywtntwxwyhtlygkz'
+
+DEFAULT_FROM_EMAIL = 'baralanup832@gmail.com'
 AUTH_USER_MODEL = 'accounts.User'
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

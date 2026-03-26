@@ -307,7 +307,7 @@ def signup_step4_payment(request):
 def signup_complete(request):
     """Signup complete - provision account"""
     org_id = request.session.get('signup_org_id')
-    user_id = request.session.get('signup_user_id')
+    user_id = request.session.get('signup_user_id');
     
     if not org_id or not user_id:
         return redirect('saas:signup_step1_organization')

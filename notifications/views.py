@@ -1,11 +1,47 @@
+import logging
+
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
+from django.core.mail import send_mass_mail
+from django.conf import settings
 from django.db import transaction
 from django.http import JsonResponse
 from .models import Notification, NotificationRead
 from .forms import NotificationForm, QuickNotificationForm
 from accounts.models import User
+
+logger = logging.getLogger(__name__)
+
+
+def _send_notification_email(notification, recipients):
+    if not recipients:
+        return 0
+
+    from_email = (
+        getattr(settings, 'DEFAULT_FROM_EMAIL', None)
+        or getattr(settings, 'EMAIL_HOST_USER', None)
+        or 'no-reply@example.com'
+    )
+    subject = f"[{notification.get_notification_type_display()}] {notification.title}"
+    body = (
+        f"{notification.message}\n\n"
+        f"From: {notification.sender.get_full_name() or notification.sender.username}"
+    )
+
+    messages_to_send = []
+    for recipient in recipients:
+        if recipient.email:
+            messages_to_send.append((subject, body, from_email, [recipient.email]))
+
+    if not messages_to_send:
+        return 0
+
+    try:
+        return send_mass_mail(messages_to_send, fail_silently=False)
+    except Exception:
+        logger.exception("Failed to send notification email(s)")
+        return 0
 
 def can_send_notifications(user):
     return user.is_authenticated and user.user_type in ['admin', 'teacher']
@@ -67,11 +103,21 @@ def create_notification(request):
                 
                 # Add recipients
                 notification.recipients.set(recipients)
+
+                should_send_email = notification.send_email or request.user.user_type == 'admin'
+                email_sent = 0
+                if should_send_email:
+                    email_sent = _send_notification_email(notification, recipients)
                 
                 messages.success(
                     request, 
                     f'Notification sent successfully to {recipients.count()} users!'
                 )
+                if should_send_email and email_sent == 0:
+                    messages.warning(
+                        request,
+                        'Notification created, but no email was sent. Check email settings and recipient emails.'
+                    )
                 return redirect('notifications:notification_list')
         else:
             form = NotificationForm(request.POST, user=request.user)
@@ -80,11 +126,21 @@ def create_notification(request):
                 notification.sender = request.user
                 notification.save()
                 form.save_m2m()  # Save many-to-many relationships
+
+                should_send_email = notification.send_email or request.user.user_type == 'admin'
+                email_sent = 0
+                if should_send_email:
+                    email_sent = _send_notification_email(notification, notification.recipients.all())
                 
                 messages.success(
                     request, 
                     f'Notification sent successfully to {notification.recipients.count()} users!'
                 )
+                if should_send_email and email_sent == 0:
+                    messages.warning(
+                        request,
+                        'Notification created, but no email was sent. Check email settings and recipient emails.'
+                    )
                 return redirect('notifications:notification_list')
     else:
         form = NotificationForm(user=request.user)
