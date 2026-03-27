@@ -166,6 +166,24 @@ def mark_as_read(request, notification_id):
     return redirect('notifications:notification_list')
 
 @login_required
+def dismiss_notification(request, notification_id):
+    if request.method != 'POST':
+        return redirect('notifications:notification_list')
+
+    notification = get_object_or_404(Notification, id=notification_id, recipients=request.user)
+
+    NotificationRead.objects.get_or_create(
+        notification=notification,
+        user=request.user
+    )
+
+    next_url = request.POST.get('next')
+    if next_url:
+        return redirect(next_url)
+
+    return redirect('accounts:dashboard')
+
+@login_required
 def get_unread_count(request):
     """API endpoint to get unread notification count for current user"""
     unread_count = Notification.objects.filter(

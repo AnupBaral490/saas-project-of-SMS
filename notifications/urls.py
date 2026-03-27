@@ -7,6 +7,7 @@ urlpatterns = [
     path('', views.notification_list, name='notification_list'),
     path('create/', views.create_notification, name='create_notification'),
     path('mark-read/<int:notification_id>/', views.mark_as_read, name='mark_as_read'),
+    path('dismiss/<int:notification_id>/', views.dismiss_notification, name='dismiss_notification'),
     path('api/unread-count/', views.get_unread_count, name='get_unread_count'),
     path('api/recent/', views.get_recent_notifications, name='get_recent_notifications'),
 ]

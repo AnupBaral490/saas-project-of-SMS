@@ -68,6 +68,32 @@
     </div>
 </div>
 
+{% if unread_notifications %}
+<div class="row mb-4">
+    <div class="col-12">
+        {% for notification in unread_notifications %}
+        <div class="alert alert-info alert-dismissible fade show shadow-sm" role="alert">
+            <div class="d-flex align-items-start">
+                <div class="me-3">
+                    <i class="fas fa-bell"></i>
+                </div>
+                <div class="flex-grow-1">
+                    <strong>{{ notification.title }}</strong>
+                    <div class="small text-muted">{{ notification.created_at|timesince }} ago</div>
+                    <div class="mt-1">{{ notification.message|truncatewords:25 }}</div>
+                </div>
+                <form method="post" action="{% url 'notifications:dismiss_notification' notification.id %}" class="ms-3">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.path }}">
+                    <button type="submit" class="btn-close" aria-label="Close"></button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
 {% if profile_missing %}
 <div class="row">
     <div class="col-12">

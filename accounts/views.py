@@ -69,6 +69,19 @@ def dashboard(request):
 
     user = request.user
     context = {'user': user}
+
+    from notifications.models import Notification
+
+    unread_notifications = Notification.objects.filter(
+        recipients=user
+    ).exclude(
+        notificationread__user=user
+    ).order_by('-created_at')[:3]
+
+    context.update({
+        'unread_notifications': unread_notifications,
+        'recent_notifications': unread_notifications
+    })
     
     # Auto-fix user_type if it's missing but profile exists
     if not user.user_type:
