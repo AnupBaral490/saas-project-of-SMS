@@ -121,6 +121,19 @@
     <main class="container-fluid mt-4">
 {% endif %}
 
+        {% if unread_notifications %}
+            {% with top_notification=unread_notifications.0 %}
+                <div class="dashboard-notification" id="dashboardNotification" data-notification-id="{{ top_notification.id }}">
+                    <button type="button" class="dashboard-notification-close" aria-label="Close notification">&times;</button>
+                    <div class="dashboard-notification-title">{{ top_notification.title }}</div>
+                    <div class="dashboard-notification-meta">
+                        {{ top_notification.get_notification_type_display }} • {{ top_notification.created_at|date:"M d, Y H:i" }}
+                    </div>
+                    <div class="dashboard-notification-message">{{ top_notification.message|truncatechars:200 }}</div>
+                </div>
+            {% endwith %}
+        {% endif %}
+
         {% if messages %}
             {% for message in messages %}
                 <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
@@ -149,6 +162,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const sidebarOverlay = document.getElementById('sidebarOverlay');
     const mainContent = document.getElementById('mainContent');
     const layoutWrapper = document.querySelector('.layout-wrapper');
+    const dashboardNotification = document.getElementById('dashboardNotification');
     
     // Check if sidebar was collapsed in previous session (desktop only)
     const sidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
@@ -257,6 +271,25 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
+
+    if (dashboardNotification) {
+        const notificationId = dashboardNotification.dataset.notificationId;
+        const dismissKey = 'dismissedNotificationId';
+
+        if (notificationId && localStorage.getItem(dismissKey) === notificationId) {
+            dashboardNotification.style.display = 'none';
+        }
+
+        const closeButton = dashboardNotification.querySelector('.dashboard-notification-close');
+        if (closeButton) {
+            closeButton.addEventListener('click', function() {
+                dashboardNotification.style.display = 'none';
+                if (notificationId) {
+                    localStorage.setItem(dismissKey, notificationId);
+                }
+            });
+        }
+    }
 });
 </script>
 
